@@ -1,0 +1,27 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f7ff;
+}
+
+#chat-box .message {
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border-radius: 10px;
+}
+
+#chat-box .message strong {
+  display: block;
+  color: #333;
+}
+
+#chat-box .message:nth-child(even) {
+  background-color: #e9f5ff;
+}
+
+#chat-box .message:nth-child(odd) {
+  background-color: #f3f3f3;
+}
+
+.history-entry {
+  margin-bottom: 10px;
+}
