@@ -36,3 +36,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadMoodHistory();
 });
+
+function fetchMoodHistory() {
+    fetch("/history")
+        .then(res => res.json())
+        .then(data => {
+            const labels = data.map(entry => entry.timestamp);
+            const moods = data.map(entry => {
+                if (entry.mood.includes("Happy")) return 1;
+                if (entry.mood.includes("Sad")) return -1;
+                return 0;
+            });
+
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Mood Over Time',
+                        data: moods,
+                        borderColor: 'blue',
+                        backgroundColor: 'lightblue',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            min: -1,
+                            max: 1,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value === 1) return 'Happy 😊';
+                                    if (value === -1) return 'Sad 😢';
+                                    return 'Neutral 😐';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+}
+
+window.onload = function () {
+    fetchMoodHistory();
+}
