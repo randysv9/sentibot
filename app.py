@@ -1,10 +1,13 @@
 from flask import Flask, render_template_string, request, jsonify
-from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import json
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+
+# Initialize VADER Sentiment Analyzer
+analyzer = SentimentIntensityAnalyzer()
 
 # Load chat page
 with open("index.html", "r") as f:
@@ -14,69 +17,60 @@ with open("index.html", "r") as f:
 def home():
     return render_template_string(html_template)
 
-# Detect mood based on text polarity
+# Detect mood using VADER
 def analyze_mood(text):
-    analysis = TextBlob(text).sentiment
-    polarity = analysis.polarity
-    subjectivity = analysis.subjectivity
+    sentiment = analyzer.polarity_scores(text)
+    compound_score = sentiment['compound']
 
-    if polarity >= 0.6:
+    # Determine mood based on the compound score
+    if compound_score >= 0.6:
         return "Excited 🤩"
-    elif polarity >= 0.3:
+    elif compound_score >= 0.3:
         return "Happy 😊"
-    elif 0.1 <= polarity < 0.3 and subjectivity < 0.5:
+    elif 0.1 <= compound_score < 0.3:
         return "Relaxed 😎"
-    elif -0.2 < polarity < 0.2:
+    elif -0.2 < compound_score < 0.2:
         return "Neutral 😐"
-    elif polarity <= -0.5:
+    elif compound_score <= -0.5:
         return "Angry 😠"
-    elif polarity <= -0.3:
+    elif compound_score <= -0.3:
         return "Anxious 😨"
     else:
         return "Sad 😢"
 
-# Route for handling chat input
+
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json["message"]
     mood = analyze_mood(user_message)
-    reply = f"I hear you. I'm here for you!"  # Bot's response
-    save_mood(mood)  # Save the mood to history
+    reply = f"I hear you. I'm here for you!"
+    save_mood(mood)
     return jsonify({"reply": reply, "mood": mood})
 
 # Save to local mood history
 def save_mood(mood):
-    # Create the history list if the file doesn't exist
     history = []
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             history = json.load(f)
-    
-    # Append the new mood to the history
     history.append({"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "mood": mood})
-    
-    # Write the last 10 moods back to the file
     with open("mood_history.json", "w") as f:
-        json.dump(history[-10:], f)
+        json.dump(history[-10:], f)  # Save last 10
 
-# Route for returning mood history
 @app.route("/history")
 def history():
-    # Load and return mood history if the file exists
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             return jsonify(json.load(f))
-    return jsonify([])  # Return an empty list if there's no history
+    return jsonify([])
 
-# Route for clearing mood history
 @app.route("/clear-history", methods=["POST"])
 def clear_history():
-    # Remove the mood history file
     if os.path.exists("mood_history.json"):
         os.remove("mood_history.json")
-    return jsonify({"status": "cleared"})  # Return a success response
+    return jsonify({"status": "cleared"})
+
 
 if __name__ == "__main__":
-    # Set the port number or default to 10000
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 10000))  # Default port if not set
     app.run(host="0.0.0.0", port=port, debug=True)
