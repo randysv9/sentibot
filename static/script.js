@@ -49,8 +49,13 @@ function loadMoodHistory() {
 
       data.forEach(entry => {
         const entryDiv = document.createElement("div");
-        entryDiv.classList.add("mb-2");
-        entryDiv.innerHTML = `<strong>${entry.timestamp}</strong>: ${entry.mood}`;
+        entryDiv.classList.add("mb-3", "p-2", "border", "rounded", "bg-light");
+
+        entryDiv.innerHTML = `
+          <strong>${entry.timestamp}</strong><br>
+          <span><strong>Mood:</strong> ${entry.mood}</span><br>
+          <span><strong>Message:</strong> ${entry.message}</span>
+        `;
         historyDiv.appendChild(entryDiv);
 
         labels.push(entry.timestamp);
@@ -64,6 +69,7 @@ function loadMoodHistory() {
     })
     .catch(error => console.error("Error loading mood history:", error));
 }
+
 
 // Handle chat submission
 document.getElementById("chat-form").addEventListener("submit", function (event) {

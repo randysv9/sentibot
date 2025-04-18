@@ -24,38 +24,53 @@ def analyze_mood(text):
 
     # Determine mood based on the compound score
     if compound_score >= 0.6:
-        return "Excited 🤩"
+        mood = "Excited 🤩"
     elif compound_score >= 0.3:
-        return "Happy 😊"
+        mood = "Happy 😊"
     elif 0.1 <= compound_score < 0.3:
-        return "Relaxed 😎"
+        mood = "Relaxed 😎"
     elif -0.2 < compound_score < 0.2:
-        return "Neutral 😐"
+        mood = "Neutral 😐"
     elif compound_score <= -0.5:
-        return "Angry 😠"
+        mood = "Angry 😠"
     elif compound_score <= -0.3:
-        return "Anxious 😨"
+        mood = "Anxious 😨"
     else:
-        return "Sad 😢"
+        mood = "Sad 😢"
 
+    return mood
 
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json["message"]
     mood = analyze_mood(user_message)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     reply = f"I hear you. I'm here for you!"
-    save_mood(mood)
-    return jsonify({"reply": reply, "mood": mood})
+
+    # Save full entry to mood history
+    entry = {
+        "timestamp": timestamp,
+        "mood": mood,
+        "text": user_message
+    }
+    save_mood(entry)
+
+    return jsonify({
+        "reply": reply,
+        "mood": mood,
+        "timestamp": timestamp,
+        "text": user_message
+    })
 
 # Save to local mood history
-def save_mood(mood):
+def save_mood(entry):
     history = []
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             history = json.load(f)
-    history.append({"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "mood": mood})
+    history.append(entry)
     with open("mood_history.json", "w") as f:
-        json.dump(history[-10:], f)  # Save last 10
+        json.dump(history[-10:], f)  # Keep last 10 entries
 
 @app.route("/history")
 def history():
@@ -70,7 +85,6 @@ def clear_history():
         os.remove("mood_history.json")
     return jsonify({"status": "cleared"})
 
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Default port if not set
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
