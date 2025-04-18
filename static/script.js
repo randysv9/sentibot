@@ -79,6 +79,7 @@ function clearMoodHistory() {
       if (data.status === "cleared") {
         const historyDiv = document.getElementById("mood-history");
         historyDiv.innerHTML = "<p class='text-muted'>No history yet.</p>";
+        alert("Mood history has been cleared.");
       }
     })
     .catch(error => console.error("Error clearing mood history:", error));
