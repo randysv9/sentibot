@@ -51,11 +51,7 @@ function loadMoodHistory() {
         const entryDiv = document.createElement("div");
         entryDiv.classList.add("mb-3", "p-2", "border", "rounded", "bg-light");
 
-        entryDiv.innerHTML = `
-          <strong>${entry.timestamp}</strong><br>
-          <span><strong>Mood:</strong> ${entry.mood}</span><br>
-          <span><strong>Message:</strong> ${entry.message}</span>
-        `;
+        entryDiv.innerHTML = `<strong>${entry.timestamp}</strong>: ${entry.mood}<br><em>Message:</em> ${entry.message || 'N/A'}`;
         historyDiv.appendChild(entryDiv);
 
         labels.push(entry.timestamp);

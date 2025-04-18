@@ -44,8 +44,9 @@ def analyze_mood(text):
 def chat():
     user_message = request.json["message"]
     mood = analyze_mood(user_message)
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     reply = f"I hear you. I'm here for you!"
+    save_mood(mood, user_message)  # ✅ Pass message
+    return jsonify({"reply": reply, "mood": mood})
 
     # Save full entry to mood history
     entry = {
@@ -63,14 +64,18 @@ def chat():
     })
 
 # Save to local mood history
-def save_mood(entry):
+def save_mood(mood, user_message):
     history = []
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             history = json.load(f)
-    history.append(entry)
+    history.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "mood": mood,
+        "message": user_message  # ✅ Save user message
+    })
     with open("mood_history.json", "w") as f:
-        json.dump(history[-10:], f)  # Keep last 10 entries
+        json.dump(history[-10:], f)  # Save last 10
 
 @app.route("/history")
 def history():
