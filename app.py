@@ -64,3 +64,9 @@ def history():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))  # Default port if not set
     app.run(host="0.0.0.0", port=port, debug=True)
+
+@app.route("/clear-history", methods=["POST"])
+def clear_history():
+    if os.path.exists("mood_history.json"):
+        os.remove("mood_history.json")
+    return jsonify({"status": "cleared"})

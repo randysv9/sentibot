@@ -38,3 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 });
+
+document.getElementById("clear-history-btn").addEventListener("click", () => {
+  fetch("/clear-history", { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("mood-history").innerHTML = '<p class="text-muted">History cleared.</p>';
+      updateChart([]); // optional, if you're updating the chart
+    });
+});
