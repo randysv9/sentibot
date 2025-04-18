@@ -16,13 +16,25 @@ def home():
 
 # Detect mood
 def analyze_mood(text):
-    polarity = TextBlob(text).sentiment.polarity
-    if polarity > 0.2:
+    analysis = TextBlob(text).sentiment
+    polarity = analysis.polarity
+    subjectivity = analysis.subjectivity
+
+    if polarity >= 0.6:
+        return "Excited 🤩"
+    elif polarity >= 0.3:
         return "Happy 😊"
-    elif polarity < -0.2:
-        return "Sad 😢"
-    else:
+    elif 0.1 <= polarity < 0.3 and subjectivity < 0.5:
+        return "Relaxed 😎"
+    elif -0.2 < polarity < 0.2:
         return "Neutral 😐"
+    elif polarity <= -0.5:
+        return "Angry 😠"
+    elif polarity <= -0.3:
+        return "Anxious 😨"
+    else:
+        return "Sad 😢"
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
