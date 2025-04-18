@@ -43,10 +43,16 @@ def analyze_mood(text):
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json["message"]
+    sentiment = analyzer.polarity_scores(user_message)
+    compound_score = sentiment['compound']
     mood = analyze_mood(user_message)
-    reply = f"I hear you. I'm here for you!"
-    save_mood(mood, user_message)  # ✅ Pass message
-    return jsonify({"reply": reply, "mood": mood})
+    reply = "I hear you. I'm here for you!"
+    save_mood(mood, user_message)
+    return jsonify({
+        "reply": reply,
+        "mood": mood,
+        "sentiment": sentiment  # ✅ Include full VADER scores
+    })
 
     # Save full entry to mood history
     entry = {

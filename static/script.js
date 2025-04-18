@@ -87,17 +87,24 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   })
     .then(response => response.json())
     .then(data => {
-      const botMessageDiv = document.createElement("div");
-      botMessageDiv.classList.add("mb-2");
-      botMessageDiv.textContent = "Sentibot: " + data.reply;
-      chatBox.appendChild(botMessageDiv);
+  const botMessageDiv = document.createElement("div");
+  botMessageDiv.classList.add("mb-2");
+  botMessageDiv.innerHTML = `
+    <strong>Sentibot:</strong> ${data.reply}<br>
+    <em>Mood:</em> ${data.mood}<br>
+    <em>Sentiment Scores:</em> 
+    <ul>
+      <li>Positive: ${data.sentiment.pos}</li>
+      <li>Neutral: ${data.sentiment.neu}</li>
+      <li>Negative: ${data.sentiment.neg}</li>
+      <li>Compound: ${data.sentiment.compound}</li>
+    </ul>
+  `;
+  chatBox.appendChild(botMessageDiv);
 
-      loadMoodHistory(); // Refresh mood history and chart
-    })
-    .catch(error => console.error("Error sending message:", error));
-
-  document.getElementById("user-input").value = "";
+  loadMoodHistory(); // Refresh mood history and chart
 });
+
 
 // Clear mood history
 function clearMoodHistory() {
