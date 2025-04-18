@@ -47,26 +47,14 @@ def chat():
     compound_score = sentiment['compound']
     mood = analyze_mood(user_message)
     reply = "I hear you. I'm here for you!"
+
+    # Save mood and user message to history
     save_mood(mood, user_message)
-    return jsonify({
-        "reply": reply,
-        "mood": mood,
-        "sentiment": sentiment  # ✅ Include full VADER scores
-    })
-
-    # Save full entry to mood history
-    entry = {
-        "timestamp": timestamp,
-        "mood": mood,
-        "text": user_message
-    }
-    save_mood(entry)
 
     return jsonify({
         "reply": reply,
         "mood": mood,
-        "timestamp": timestamp,
-        "text": user_message
+        "sentiment": sentiment  # Include full VADER scores
     })
 
 # Save to local mood history
@@ -75,11 +63,13 @@ def save_mood(mood, user_message):
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             history = json.load(f)
+
     history.append({
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "mood": mood,
-        "message": user_message  # ✅ Save user message
+        "message": user_message  # Save user message
     })
+
     with open("mood_history.json", "w") as f:
         json.dump(history[-10:], f)  # Save last 10
 
@@ -88,7 +78,7 @@ def history():
     if os.path.exists("mood_history.json"):
         with open("mood_history.json", "r") as f:
             return jsonify(json.load(f))
-    return jsonify([])
+    return jsonify([])  # Return an empty list if there's no history file yet
 
 @app.route("/clear-history", methods=["POST"])
 def clear_history():

@@ -66,7 +66,6 @@ function loadMoodHistory() {
     .catch(error => console.error("Error loading mood history:", error));
 }
 
-
 // Handle chat submission
 document.getElementById("chat-form").addEventListener("submit", function (event) {
   event.preventDefault();
@@ -87,24 +86,25 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   })
     .then(response => response.json())
     .then(data => {
-  const botMessageDiv = document.createElement("div");
-  botMessageDiv.classList.add("mb-2");
-  botMessageDiv.innerHTML = `
-    <strong>Sentibot:</strong> ${data.reply}<br>
-    <em>Mood:</em> ${data.mood}<br>
-    <em>Sentiment Scores:</em> 
-    <ul>
-      <li>Positive: ${data.sentiment.pos}</li>
-      <li>Neutral: ${data.sentiment.neu}</li>
-      <li>Negative: ${data.sentiment.neg}</li>
-      <li>Compound: ${data.sentiment.compound}</li>
-    </ul>
-  `;
-  chatBox.appendChild(botMessageDiv);
+      const botMessageDiv = document.createElement("div");
+      botMessageDiv.classList.add("mb-2");
+      botMessageDiv.innerHTML = `
+        <strong>Sentibot:</strong> ${data.reply}<br>
+        <em>Mood:</em> ${data.mood}<br>
+        <em>Sentiment Scores:</em> 
+        <ul>
+          <li>Positive: ${data.sentiment.pos}</li>
+          <li>Neutral: ${data.sentiment.neu}</li>
+          <li>Negative: ${data.sentiment.neg}</li>
+          <li>Compound: ${data.sentiment.compound}</li>
+        </ul>
+      `;
+      chatBox.appendChild(botMessageDiv);
 
-  loadMoodHistory(); // Refresh mood history and chart
+      loadMoodHistory(); // Refresh mood history and chart
+    })
+    .catch(error => console.error("Error during chat:", error));
 });
-
 
 // Clear mood history
 function clearMoodHistory() {
