@@ -1,49 +1,85 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const historyBox = document.getElementById("history");
-  const chatBox = document.getElementById("chat-box");
+// Fetch and display mood history when the page loads
+document.addEventListener("DOMContentLoaded", function() {
+  loadMoodHistory();
 
-  // Load history
-  fetch("/history")
-    .then((res) => res.json())
-    .then((data) => {
-      data.forEach((item) => {
-        const p = document.createElement("p");
-        p.textContent = `${item.timestamp} - Mood: ${item.mood}`;
-        historyBox.appendChild(p);
-      });
-    });
-
-  // Existing event listener
-  document.getElementById("send-btn").addEventListener("click", () => {
-    const userInput = document.getElementById("user-input");
-    const message = userInput.value;
-    if (!message) return;
-
-    fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const userMsg = document.createElement("p");
-        userMsg.textContent = `You: ${message}`;
-        chatBox.appendChild(userMsg);
-
-        const botReply = document.createElement("p");
-        botReply.textContent = `SentiBot: ${data.reply} | Mood: ${data.mood}`;
-        chatBox.appendChild(botReply);
-
-        userInput.value = "";
-      });
+  // Handle the 'Clear History' button click
+  document.getElementById("clear-history-btn").addEventListener("click", function() {
+    clearMoodHistory();
   });
 });
 
-document.getElementById("clear-history-btn").addEventListener("click", () => {
-  fetch("/clear-history", { method: "POST" })
-    .then(res => res.json())
+// Load the mood history and update the UI
+function loadMoodHistory() {
+  fetch("/history")
+    .then(response => response.json())
     .then(data => {
-      document.getElementById("mood-history").innerHTML = '<p class="text-muted">History cleared.</p>';
-      updateChart([]); // optional, if you're updating the chart
-    });
+      const historyDiv = document.getElementById("mood-history");
+      historyDiv.innerHTML = "";  // Clear current content
+
+      if (data.length === 0) {
+        historyDiv.innerHTML = "<p class='text-muted'>No history yet.</p>";
+      } else {
+        data.forEach(entry => {
+          const entryDiv = document.createElement("div");
+          entryDiv.classList.add("mb-2");
+          entryDiv.innerHTML = `<strong>${entry.timestamp}</strong>: ${entry.mood}`;
+          historyDiv.appendChild(entryDiv);
+        });
+      }
+    })
+    .catch(error => console.error("Error loading mood history:", error));
+}
+
+// Handle the form submission for chat input
+document.getElementById("chat-form").addEventListener("submit", function(event) {
+  event.preventDefault();
+
+  const userMessage = document.getElementById("user-input").value;
+  if (!userMessage) return;
+
+  // Display the user's message in the chat box
+  const chatBox = document.getElementById("chat-box");
+  const userMessageDiv = document.createElement("div");
+  userMessageDiv.classList.add("mb-2");
+  userMessageDiv.classList.add("text-end");
+  userMessageDiv.textContent = "You: " + userMessage;
+  chatBox.appendChild(userMessageDiv);
+
+  // Send the message to the Flask server
+  fetch("/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: userMessage })
+  })
+    .then(response => response.json())
+    .then(data => {
+      const botMessageDiv = document.createElement("div");
+      botMessageDiv.classList.add("mb-2");
+      botMessageDiv.textContent = "Sentibot: " + data.reply;
+      chatBox.appendChild(botMessageDiv);
+
+      // Update mood history with the new mood
+      loadMoodHistory();  // Re-load the mood history after sending a message
+    })
+    .catch(error => console.error("Error sending message:", error));
+
+  // Clear the input field
+  document.getElementById("user-input").value = "";
 });
+
+// Clear the mood history
+function clearMoodHistory() {
+  fetch("/clear-history", {
+    method: "POST"
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "cleared") {
+        const historyDiv = document.getElementById("mood-history");
+        historyDiv.innerHTML = "<p class='text-muted'>No history yet.</p>";
+      }
+    })
+    .catch(error => console.error("Error clearing mood history:", error));
+}
