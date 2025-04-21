@@ -6,6 +6,14 @@ document.addEventListener("DOMContentLoaded", function () {
   document.getElementById("clear-history-btn").addEventListener("click", function () {
     clearMoodHistory();
   });
+
+  // Event listener for the dropdown
+  document.getElementById("mood-dropdown").addEventListener("change", function () {
+    const selectedMood = this.value;
+    if (selectedMood) {
+      submitMoodMessage(selectedMood);
+    }
+  });
 });
 
 // Mood to color mapping
@@ -71,15 +79,14 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   event.preventDefault();
 
   const userMessage = document.getElementById("user-input").value;
-  const selectedMood = document.getElementById("mood-select").value;  // Get selected mood from dropdown
-  if (!userMessage || !selectedMood) return;  // Ensure both message and mood are selected
+  if (!userMessage && !document.getElementById("mood-dropdown").value) return;
 
   const chatBox = document.getElementById("chat-box");
 
   // Append user message
   const userMessageDiv = document.createElement("div");
   userMessageDiv.classList.add("mb-2", "text-end");
-  userMessageDiv.textContent = "You: " + userMessage;
+  userMessageDiv.textContent = "You: " + (userMessage || document.getElementById("mood-dropdown").value);
   chatBox.appendChild(userMessageDiv);
 
   // Add loading spinner
@@ -94,13 +101,13 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   chatBox.appendChild(loadingDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  // Send message to backend along with mood
+  // Send message to backend
   fetch("/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ message: userMessage, mood: selectedMood })  // Include mood in the request
+    body: JSON.stringify({ message: userMessage || document.getElementById("mood-dropdown").value })
   })
     .then(response => response.json())
     .then(data => {
@@ -113,7 +120,6 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
       chatBox.scrollTop = chatBox.scrollHeight;
 
       document.getElementById("user-input").value = "";
-      document.getElementById("mood-select").value = ""; // Reset the dropdown after sending
       loadMoodHistory(); // Update mood history and chart
     })
     .catch(error => {
@@ -171,4 +177,11 @@ function clearMoodHistory() {
       loadMoodHistory();
     })
     .catch(error => console.error("Error clearing mood history:", error));
+}
+
+// Function to handle mood selection
+function submitMoodMessage(mood) {
+  // Trigger submit event if mood is selected
+  const event = new Event("submit");
+  document.getElementById("chat-form").dispatchEvent(event);
 }
