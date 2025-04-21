@@ -87,4 +87,86 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   loadingDiv.classList.add("mb-2");
   loadingDiv.innerHTML = `
     <strong>Sentibot:</strong> <div class="typing-spinner">
-      <span
+      <span>.</span><span>.</span><span>.</span>
+    </div>
+  `;
+  chatBox.appendChild(loadingDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Send message to backend
+  fetch("/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message: userMessage })
+  })
+    .then(response => response.json())
+    .then(data => {
+      loadingDiv.remove();
+
+      const botMessageDiv = document.createElement("div");
+      botMessageDiv.classList.add("mb-2");
+      botMessageDiv.innerHTML = `<strong>Sentibot:</strong> ${data.reply}`;
+      chatBox.appendChild(botMessageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      document.getElementById("user-input").value = "";
+      loadMoodHistory(); // Update mood history and chart
+    })
+    .catch(error => {
+      console.error("Error sending message:", error);
+      loadingDiv.remove();
+    });
+});
+
+// Update mood chart
+function updateMoodChart(labels, values) {
+  const ctx = document.getElementById("moodChart").getContext("2d");
+
+  if (moodChart) {
+    moodChart.destroy();
+  }
+
+  moodChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Mood Level",
+        data: values.map(v => v.y),
+        backgroundColor: values.map(v => moodColors[v.mood]),
+        borderColor: "#333",
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          min: 0,
+          max: 6,
+          ticks: {
+            stepSize: 1,
+            callback: function (value) {
+              const mood = Object.keys(moodLevels).find(key => moodLevels[key] === value);
+              return mood || value;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Clear mood history
+function clearMoodHistory() {
+  fetch("/clear", { method: "POST" })
+    .then(() => {
+      loadMoodHistory();
+    })
+    .catch(error => console.error("Error clearing mood history:", error));
+}
