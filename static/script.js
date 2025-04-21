@@ -74,11 +74,26 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   if (!userMessage) return;
 
   const chatBox = document.getElementById("chat-box");
+
+  // Append user message
   const userMessageDiv = document.createElement("div");
   userMessageDiv.classList.add("mb-2", "text-end");
   userMessageDiv.textContent = "You: " + userMessage;
   chatBox.appendChild(userMessageDiv);
 
+  // Add loading message
+  const loadingDiv = document.createElement("div");
+  loadingDiv.classList.add("mb-2", "text-start");
+  loadingDiv.id = "loading-message";
+  loadingDiv.innerHTML = `
+    <strong>Sentibot:</strong> <span class="spinner-border spinner-border-sm text-primary" role="status"></span> typing...
+  `;
+  chatBox.appendChild(loadingDiv);
+
+  // Scroll chat box to bottom
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Send message to server
   fetch("/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -86,8 +101,13 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   })
     .then(response => response.json())
     .then(data => {
+      // Remove loading message
+      const oldLoading = document.getElementById("loading-message");
+      if (oldLoading) oldLoading.remove();
+
+      // Show bot's response
       const botMessageDiv = document.createElement("div");
-      botMessageDiv.classList.add("mb-2");
+      botMessageDiv.classList.add("mb-2", "text-start");
       botMessageDiv.innerHTML = `
         <strong>Sentibot:</strong> ${data.reply}<br>
         <em>Mood:</em> ${data.mood}<br>
@@ -100,11 +120,26 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
         </ul>
       `;
       chatBox.appendChild(botMessageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
 
-      loadMoodHistory(); // Refresh mood history and chart
+      // Refresh mood history and chart
+      loadMoodHistory();
     })
-    .catch(error => console.error("Error during chat:", error));
+    .catch(error => {
+      console.error("Error:", error);
+      const oldLoading = document.getElementById("loading-message");
+      if (oldLoading) oldLoading.remove();
+
+      const errorDiv = document.createElement("div");
+      errorDiv.classList.add("mb-2", "text-start", "text-danger");
+      errorDiv.innerHTML = `<strong>Sentibot:</strong> Oops! Something went wrong.`;
+      chatBox.appendChild(errorDiv);
+    });
+
+  // Clear input
+  document.getElementById("user-input").value = "";
 });
+
 
 // Clear mood history
 function clearMoodHistory() {
