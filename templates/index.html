@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentibot - Mood Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Custom CSS (Flask static path) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container py-4">
+    <div class="text-center mb-4">
+      <h1 class="fw-bold">🤖 Sentibot</h1>
+      <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
+    </div>
+
+    <!-- Mood History Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-info text-white">🧠 Recent Mood History</div>
+      <div id="mood-history" class="card-body" style="max-height: 200px; overflow-y: auto;">
+        <p class="text-muted">No history yet.</p>
+      </div>
+      <div class="card-footer text-end">
+        <button id="clear-history-btn" class="btn btn-sm btn-danger" aria-label="Clear Mood History">
+          <i class="fas fa-trash-alt"></i> Clear History
+        </button>
+      </div>
+    </div>
+
+    <!-- Mood Chart Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-secondary text-white">📊 Mood Chart</div>
+      <div class="card-body">
+        <canvas id="moodChart" width="400" height="200" aria-label="Mood Chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-primary text-white">💬 Chat</div>
+      <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
+    </div>
+
+    <!-- Chat Form -->
+    <form id="chat-form" class="d-flex gap-2" autocomplete="off
