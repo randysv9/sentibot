@@ -71,7 +71,8 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   event.preventDefault();
 
   const userMessage = document.getElementById("user-input").value;
-  if (!userMessage) return;
+  const selectedMood = document.getElementById("mood-select").value;  // Get selected mood from dropdown
+  if (!userMessage || !selectedMood) return;  // Ensure both message and mood are selected
 
   const chatBox = document.getElementById("chat-box");
 
@@ -93,13 +94,13 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
   chatBox.appendChild(loadingDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
 
-  // Send message to backend
+  // Send message to backend along with mood
   fetch("/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ message: userMessage })
+    body: JSON.stringify({ message: userMessage, mood: selectedMood })  // Include mood in the request
   })
     .then(response => response.json())
     .then(data => {
@@ -112,6 +113,7 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
       chatBox.scrollTop = chatBox.scrollHeight;
 
       document.getElementById("user-input").value = "";
+      document.getElementById("mood-select").value = ""; // Reset the dropdown after sending
       loadMoodHistory(); // Update mood history and chart
     })
     .catch(error => {
