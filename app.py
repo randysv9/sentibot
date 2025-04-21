@@ -3,6 +3,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import json
 import os
 from datetime import datetime
+import random
 
 app = Flask(__name__)
 
@@ -11,7 +12,7 @@ analyzer = SentimentIntensityAnalyzer()
 
 @app.route("/")
 def home():
-    return render_template("index.html")  # Now uses the templates folder
+    return render_template("index.html")
 
 # Detect mood using VADER
 def analyze_mood(text):
@@ -35,14 +36,83 @@ def analyze_mood(text):
 
     return mood
 
+# Detect general context of the message
+def detect_context(message):
+    work_keywords = ["job", "work", "deadline", "office", "boss"]
+    school_keywords = ["school", "exam", "teacher", "homework", "project"]
+    life_keywords = ["family", "friends", "relationship", "health", "life"]
+
+    message = message.lower()
+    if any(word in message for word in work_keywords):
+        return "work"
+    elif any(word in message for word in school_keywords):
+        return "school"
+    elif any(word in message for word in life_keywords):
+        return "life"
+    return "general"
+
+# Motivational quotes per mood
+quotes = {
+    "Sad 😢": [
+        "“This too shall pass.”",
+        "“You are stronger than you think.”",
+        "“Every storm runs out of rain.”"
+    ],
+    "Angry 😠": [
+        "“Holding onto anger is like drinking poison.”",
+        "“Breathe. Relax. You got this.”"
+    ],
+    "Anxious 😨": [
+        "“Inhale peace, exhale stress.”",
+        "“One step at a time.”"
+    ]
+}
+
+# Follow-up prompts
+follow_ups = {
+    "Sad 😢": [
+        "Would you like to talk more about it?",
+        "What’s been on your mind lately?",
+        "Is there something that triggered this sadness?"
+    ],
+    "Angry 😠": [
+        "Do you want to vent about it?",
+        "What made you feel this way?",
+        "Sometimes writing it out helps. What's going on?"
+    ],
+    "Anxious 😨": [
+        "Would it help to talk through it?",
+        "Is there a specific worry on your mind?",
+        "Let's try to break it down together."
+    ]
+}
+
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json["message"]
     sentiment = analyzer.polarity_scores(user_message)
-    compound_score = sentiment['compound']
     mood = analyze_mood(user_message)
-    reply = "I hear you. I'm here for you!"
+    context = detect_context(user_message)
 
+    # Basic reply based on context
+    if context == "work":
+        reply = "Work can be demanding. Is it something your job or tasks are causing?"
+    elif context == "school":
+        reply = "School pressures can pile up quickly. Want to talk about what’s stressing you?"
+    elif context == "life":
+        reply = "Life can feel overwhelming. I'm here to listen. Want to share more?"
+    else:
+        reply = "I hear you. I'm here for you!"
+
+    # Add mood-specific follow-up
+    if mood in follow_ups:
+        reply += " " + random.choice(follow_ups[mood])
+
+    # Add motivational quote
+    if mood in quotes:
+        reply += " Here's something to lift you up: " + random.choice(quotes[mood])
+
+    # Save entry to history
     save_mood(mood, user_message)
 
     return jsonify({
