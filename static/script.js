@@ -78,15 +78,20 @@ function loadMoodHistory() {
 document.getElementById("chat-form").addEventListener("submit", function (event) {
   event.preventDefault();
 
-  const userMessage = document.getElementById("user-input").value;
-  if (!userMessage && !document.getElementById("mood-dropdown").value) return;
+  const userInput = document.getElementById("user-input").value.trim();
+  const moodDropdown = document.getElementById("mood-dropdown");
+  const selectedMood = moodDropdown ? moodDropdown.value : "";
+
+  const messageToSend = userInput || selectedMood;
+
+  if (!messageToSend) return; // Don't send empty messages
 
   const chatBox = document.getElementById("chat-box");
 
   // Append user message
   const userMessageDiv = document.createElement("div");
   userMessageDiv.classList.add("mb-2", "text-end");
-  userMessageDiv.textContent = "You: " + (userMessage || document.getElementById("mood-dropdown").value);
+  userMessageDiv.textContent = "You: " + messageToSend;
   chatBox.appendChild(userMessageDiv);
 
   // Add loading spinner
@@ -107,7 +112,7 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ message: userMessage || document.getElementById("mood-dropdown").value })
+    body: JSON.stringify({ message: messageToSend })
   })
     .then(response => response.json())
     .then(data => {
@@ -119,7 +124,10 @@ document.getElementById("chat-form").addEventListener("submit", function (event)
       chatBox.appendChild(botMessageDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
 
+      // Clear input and dropdown after sending
       document.getElementById("user-input").value = "";
+      if (moodDropdown) moodDropdown.value = "";
+
       loadMoodHistory(); // Update mood history and chart
     })
     .catch(error => {
@@ -181,7 +189,7 @@ function clearMoodHistory() {
 
 // Function to handle mood selection
 function submitMoodMessage(mood) {
-  // Trigger submit event if mood is selected
+  // Auto-submit when mood is selected
   const event = new Event("submit");
   document.getElementById("chat-form").dispatchEvent(event);
 }
