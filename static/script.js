@@ -1,11 +1,55 @@
+let currentUser = null;
 let moodChart; // Global Chart.js instance
 
 document.addEventListener("DOMContentLoaded", function () {
-  loadMoodHistory();
+  // Check session on load
+  fetch("/check-session")
+    .then(res => res.json())
+    .then(data => {
+      if (data.loggedIn) {
+        currentUser = data.username;
+        showAppSection();
+        loadMoodHistory();
+      } else {
+        showLoginSection();
+      }
+    });
 
+  // Handle login
+  document.getElementById("login-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          currentUser = username;
+          showAppSection();
+          loadMoodHistory();
+        } else {
+          document.getElementById("login-error").textContent = data.message;
+        }
+      });
+  });
+
+  // Handle logout
+  document.getElementById("logout-btn").addEventListener("click", function () {
+    fetch("/logout", { method: "POST" })
+      .then(() => {
+        currentUser = null;
+        showLoginSection();
+      });
+  });
+
+  // Other app functionality
   document.getElementById("clear-history-btn").addEventListener("click", clearMoodHistory);
 
-  // Submit mood directly if selected
   const moodSelect = document.getElementById("mood-select");
   if (moodSelect) {
     moodSelect.addEventListener("change", function () {
@@ -13,7 +57,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Handle chat form
   document.getElementById("chat-form").addEventListener("submit", function (event) {
     event.preventDefault();
 
@@ -25,13 +68,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const chatBox = document.getElementById("chat-box");
 
-    // Append user message
     const userMessageDiv = document.createElement("div");
     userMessageDiv.classList.add("mb-2", "text-end");
     userMessageDiv.textContent = `You (${selectedMood}): ${userInput || selectedMood}`;
     chatBox.appendChild(userMessageDiv);
 
-    // Loading spinner
     const loadingDiv = document.createElement("div");
     loadingDiv.id = "loading-indicator";
     loadingDiv.classList.add("mb-2");
@@ -39,7 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
     chatBox.appendChild(loadingDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Send to server
     fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,6 +106,19 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 });
+
+function showLoginSection() {
+  document.getElementById("login-section").style.display = "block";
+  document.getElementById("app-section").style.display = "none";
+  document.getElementById("login-form").reset();
+  document.getElementById("login-error").textContent = "";
+}
+
+function showAppSection() {
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("app-section").style.display = "block";
+  document.getElementById("user-display").textContent = currentUser;
+}
 
 const moodColors = {
   "Excited 🤩": "#f39c12",
@@ -115,7 +168,7 @@ function loadMoodHistory() {
       });
 
       updateMoodChart(labels, values);
-      updateMoodSummary(data); // Update the summary here
+      updateMoodSummary(data);
     })
     .catch(err => console.error("Error loading mood history:", err));
 }
@@ -188,6 +241,5 @@ function clearMoodHistory() {
 }
 
 function submitMoodMessage(mood) {
-  // Just triggers the chat form submission
   document.getElementById("chat-form").dispatchEvent(new Event("submit"));
 }
