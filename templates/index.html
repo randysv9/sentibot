@@ -15,6 +15,32 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
+
+<!-- Add this just inside <body> -->
+<div id="login-section">
+  <h2>Login</h2>
+  <form id="login-form">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  <p id="login-error" style="color: red;"></p>
+</div>
+
+<div id="app-section" style="display: none;">
+  <button id="logout-btn" style="float:right;">Logout</button>
+  <h2>Welcome, <span id="user-display"></span>!</h2>
+  
+  <!-- Keep your mood selector, chat box, etc. here -->
+</div>
+
+
+
+
+
+
+
   <div class="container py-4">
     
     <!-- Names aligned left and right -->
