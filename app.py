@@ -138,9 +138,14 @@ def chat():
 
 # Save mood to local history
 def save_mood(mood, user_message):
+    user_ip = request.remote_addr  # Identify the user by their IP address (or use a user ID if you have one)
     history = []
-    if os.path.exists("mood_history.json"):
-        with open("mood_history.json", "r") as f:
+
+    # Check if there's a file for that user
+    user_file = f"user_{user_ip}_history.json"
+    
+    if os.path.exists(user_file):
+        with open(user_file, "r") as f:
             history = json.load(f)
 
     history.append({
@@ -149,8 +154,8 @@ def save_mood(mood, user_message):
         "message": user_message
     })
 
-    with open("mood_history.json", "w") as f:
-        json.dump(history[-10:], f)  # Save only the last 10 entries
+    with open(user_file, "w") as f:
+        json.dump(history[-10:], f)  # Keep only the last 10 entries for each user
 
 @app.route("/history")
 def history():
@@ -182,9 +187,13 @@ def daily_summary():
     summary = defaultdict(lambda: defaultdict(int))
 
     for entry in history:
+        # Date and weekday
         date_str = entry["timestamp"].split(" ")[0]
+        weekday = datetime.strptime(date_str, "%Y-%m-%d").strftime("%A")
         mood = entry["mood"]
+        
         summary[date_str][mood] += 1
+        summary[date_str]["weekday"] = weekday
 
     return jsonify(summary)
 

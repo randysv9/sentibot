@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const moodSelect = document.getElementById("mood-select");
   if (moodSelect) {
     moodSelect.addEventListener("change", function () {
+      // Ensure mood is selected before submitting
       if (this.value) submitMoodMessage(this.value);
     });
   }
