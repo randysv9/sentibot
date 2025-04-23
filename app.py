@@ -4,6 +4,7 @@ import json
 import os
 from datetime import datetime
 import random
+from collections import defaultdict  # ✅ Added for summary feature
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
@@ -168,6 +169,24 @@ def clear_history():
 def clear_session():
     session.pop("history", None)
     return jsonify({"status": "session cleared"})
+
+# ✅ New route: Mood Summary by Day
+@app.route("/summary")
+def daily_summary():
+    if not os.path.exists("mood_history.json"):
+        return jsonify({})
+
+    with open("mood_history.json", "r") as f:
+        history = json.load(f)
+
+    summary = defaultdict(lambda: defaultdict(int))
+
+    for entry in history:
+        date_str = entry["timestamp"].split(" ")[0]
+        mood = entry["mood"]
+        summary[date_str][mood] += 1
+
+    return jsonify(summary)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
