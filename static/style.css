@@ -104,15 +104,18 @@ body {
 }
 
 /* === Login Section Styles === */
+
 #login-section {
-  position: fixed;
-  top: 10px;
-  right: 10px;
+  position: relative; /* Changed from fixed to relative */
+  top: auto;
+  right: auto;
   padding: 20px;
   background-color: white;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  font-size: 16px; /* Adjust the font size to match other texts */
+  z-index: 1; /* Adjusted z-index to ensure proper layering */
+  margin-bottom: 20px; /* Added margin to separate from subsequent content */
+}
+
 }
 
 #login-section h2 {
