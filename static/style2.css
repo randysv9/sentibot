@@ -1,18 +1,12 @@
-/* === Global Styles === */
 body {
   font-family: Arial, sans-serif;
   background: #f2f7ff;
-  margin: 0;
-  padding: 0;
 }
 
-/* === Chat Box Styles === */
 #chat-box .message {
   margin-bottom: 10px;
   padding: 6px 12px;
   border-radius: 10px;
-  font-size: 14px;
-  line-height: 1.4;
 }
 
 #chat-box .message strong {
@@ -28,24 +22,17 @@ body {
   background-color: #f3f3f3;
 }
 
-/* === Mood History Entries === */
-.history-entry,
-#mood-history .mb-3 {
+.history-entry {
   margin-bottom: 10px;
-  padding: 10px;
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-left: 6px solid #3498db;
-  border-radius: 8px;
 }
 
-/* === Typing Spinner Animation === */
+
+
 .typing-spinner {
   display: inline-block;
   width: 40px;
   height: 20px;
   position: relative;
-  vertical-align: middle;
 }
 
 .typing-spinner span {
@@ -69,11 +56,10 @@ body {
   left: 24px;
 }
 
-/* === Bounce Animation Keyframes === */
 @keyframes bounce {
   0%, 80%, 100% {
     transform: scale(0);
-  }
+  } 
   40% {
     transform: scale(1);
   }

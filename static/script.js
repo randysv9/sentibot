@@ -1,22 +1,72 @@
-let moodChart; // Global variable for Chart.js instance
+let moodChart; // Global Chart.js instance
 
 document.addEventListener("DOMContentLoaded", function () {
   loadMoodHistory();
 
-  document.getElementById("clear-history-btn").addEventListener("click", function () {
-    clearMoodHistory();
-  });
+  document.getElementById("clear-history-btn").addEventListener("click", clearMoodHistory);
 
-  // Event listener for the dropdown
-  document.getElementById("mood-dropdown").addEventListener("change", function () {
-    const selectedMood = this.value;
-    if (selectedMood) {
-      submitMoodMessage(selectedMood);
-    }
+  // Submit mood directly if selected
+  const moodSelect = document.getElementById("mood-select");
+  if (moodSelect) {
+    moodSelect.addEventListener("change", function () {
+      if (this.value) submitMoodMessage(this.value);
+    });
+  }
+
+  // Handle chat form
+  document.getElementById("chat-form").addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const userInput = document.getElementById("user-input").value.trim();
+    const selectedMood = moodSelect ? moodSelect.value : "";
+
+    const messageToSend = userInput || selectedMood;
+    if (!messageToSend) return;
+
+    const chatBox = document.getElementById("chat-box");
+
+    // Append user message
+    const userMessageDiv = document.createElement("div");
+    userMessageDiv.classList.add("mb-2", "text-end");
+    userMessageDiv.textContent = `You (${selectedMood}): ${userInput || selectedMood}`;
+    chatBox.appendChild(userMessageDiv);
+
+    // Loading spinner
+    const loadingDiv = document.createElement("div");
+    loadingDiv.id = "loading-indicator";
+    loadingDiv.classList.add("mb-2");
+    loadingDiv.innerHTML = `<strong>Sentibot:</strong> <div class="typing-spinner"><span>.</span><span>.</span><span>.</span></div>`;
+    chatBox.appendChild(loadingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Send to server
+    fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: messageToSend })
+    })
+      .then(res => res.json())
+      .then(data => {
+        loadingDiv.remove();
+
+        const botReply = document.createElement("div");
+        botReply.classList.add("mb-2");
+        botReply.innerHTML = `<strong>Sentibot:</strong> ${data.reply}`;
+        chatBox.appendChild(botReply);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        document.getElementById("user-input").value = "";
+        if (moodSelect) moodSelect.value = "";
+
+        loadMoodHistory();
+      })
+      .catch(err => {
+        console.error("Error sending message:", err);
+        loadingDiv.remove();
+      });
   });
 });
 
-// Mood to color mapping
 const moodColors = {
   "Excited 🤩": "#f39c12",
   "Happy 😊": "#2ecc71",
@@ -27,7 +77,6 @@ const moodColors = {
   "Angry 😠": "#e74c3c"
 };
 
-// Mood to numerical value (for chart)
 const moodLevels = {
   "Excited 🤩": 6,
   "Happy 😊": 5,
@@ -38,10 +87,9 @@ const moodLevels = {
   "Angry 😠": 0
 };
 
-// Load mood history and chart
 function loadMoodHistory() {
   fetch("/history")
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
       const historyDiv = document.getElementById("mood-history");
       historyDiv.innerHTML = "";
@@ -58,96 +106,26 @@ function loadMoodHistory() {
       data.forEach(entry => {
         const entryDiv = document.createElement("div");
         entryDiv.classList.add("mb-3", "p-2", "border", "rounded", "bg-light");
-
         entryDiv.innerHTML = `<strong>${entry.timestamp}</strong>: ${entry.mood}<br><em>Message:</em> ${entry.message || 'N/A'}`;
         historyDiv.appendChild(entryDiv);
 
         labels.push(entry.timestamp);
-        values.push({
-          y: moodLevels[entry.mood],
-          mood: entry.mood
-        });
+        values.push({ y: moodLevels[entry.mood], mood: entry.mood });
       });
 
       updateMoodChart(labels, values);
     })
-    .catch(error => console.error("Error loading mood history:", error));
+    .catch(err => console.error("Error loading mood history:", err));
 }
 
-// Handle chat submission
-document.getElementById("chat-form").addEventListener("submit", function (event) {
-  event.preventDefault();
-
-  const userInput = document.getElementById("user-input").value.trim();
-  const moodDropdown = document.getElementById("mood-dropdown");
-  const selectedMood = moodDropdown ? moodDropdown.value : "";
-
-  const messageToSend = userInput || selectedMood;
-
-  if (!messageToSend) return; // Don't send empty messages
-
-  const chatBox = document.getElementById("chat-box");
-
-  // Append user message
-  const userMessageDiv = document.createElement("div");
-  userMessageDiv.classList.add("mb-2", "text-end");
-  userMessageDiv.textContent = "You: " + messageToSend;
-  chatBox.appendChild(userMessageDiv);
-
-  // Add loading spinner
-  const loadingDiv = document.createElement("div");
-  loadingDiv.id = "loading-indicator";
-  loadingDiv.classList.add("mb-2");
-  loadingDiv.innerHTML = `
-    <strong>Sentibot:</strong> <div class="typing-spinner">
-      <span>.</span><span>.</span><span>.</span>
-    </div>
-  `;
-  chatBox.appendChild(loadingDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-
-  // Send message to backend
-  fetch("/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ message: messageToSend })
-  })
-    .then(response => response.json())
-    .then(data => {
-      loadingDiv.remove();
-
-      const botMessageDiv = document.createElement("div");
-      botMessageDiv.classList.add("mb-2");
-      botMessageDiv.innerHTML = `<strong>Sentibot:</strong> ${data.reply}`;
-      chatBox.appendChild(botMessageDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      // Clear input and dropdown after sending
-      document.getElementById("user-input").value = "";
-      if (moodDropdown) moodDropdown.value = "";
-
-      loadMoodHistory(); // Update mood history and chart
-    })
-    .catch(error => {
-      console.error("Error sending message:", error);
-      loadingDiv.remove();
-    });
-});
-
-// Update mood chart
 function updateMoodChart(labels, values) {
   const ctx = document.getElementById("moodChart").getContext("2d");
-
-  if (moodChart) {
-    moodChart.destroy();
-  }
+  if (moodChart) moodChart.destroy();
 
   moodChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: labels,
+      labels,
       datasets: [{
         label: "Mood Level",
         data: values.map(v => v.y),
@@ -167,10 +145,7 @@ function updateMoodChart(labels, values) {
           max: 6,
           ticks: {
             stepSize: 1,
-            callback: function (value) {
-              const mood = Object.keys(moodLevels).find(key => moodLevels[key] === value);
-              return mood || value;
-            }
+            callback: value => Object.keys(moodLevels).find(key => moodLevels[key] === value) || value
           }
         }
       }
@@ -178,18 +153,13 @@ function updateMoodChart(labels, values) {
   });
 }
 
-// Clear mood history
 function clearMoodHistory() {
   fetch("/clear", { method: "POST" })
-    .then(() => {
-      loadMoodHistory();
-    })
-    .catch(error => console.error("Error clearing mood history:", error));
+    .then(() => loadMoodHistory())
+    .catch(err => console.error("Error clearing mood history:", err));
 }
 
-// Function to handle mood selection
 function submitMoodMessage(mood) {
-  // Auto-submit when mood is selected
-  const event = new Event("submit");
-  document.getElementById("chat-form").dispatchEvent(event);
+  // Just triggers the chat form submission
+  document.getElementById("chat-form").dispatchEvent(new Event("submit"));
 }
