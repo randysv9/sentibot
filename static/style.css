@@ -6,32 +6,10 @@ body {
   padding: 0;
 }
 
-/* === Container and Layout Styles === */
-.container {
-  margin-top: 80px; /* Adjust top margin to avoid overlapping with fixed login section */
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px; /* Add spacing between elements */
-}
-
-.card {
-  margin-bottom: 20px; /* Space between each card */
-  border-radius: 10px;
-}
-
 /* === Chat Box Styles === */
-#chat-box {
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 #chat-box .message {
-  margin-bottom: 12px; /* Ensure messages are well spaced */
-  padding: 8px 15px; /* Adjust padding for better readability */
+  margin-bottom: 10px;
+  padding: 6px 12px;
   border-radius: 10px;
   font-size: 14px;
   line-height: 1.4;
@@ -83,12 +61,10 @@ body {
   left: 0;
   animation-delay: -0.32s;
 }
-
 .typing-spinner span:nth-child(2) {
   left: 12px;
   animation-delay: -0.16s;
 }
-
 .typing-spinner span:nth-child(3) {
   left: 24px;
 }
@@ -100,75 +76,5 @@ body {
   }
   40% {
     transform: scale(1);
-  }
-}
-
-/* === Login Section Styles === */
-
-#login-section {
-  position: relative; /* Changed from fixed to relative */
-  top: auto;
-  right: auto;
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1; /* Adjusted z-index to ensure proper layering */
-  margin-bottom: 20px; /* Added margin to separate from subsequent content */
-}
-
-}
-
-#login-section h2 {
-  font-size: 1.5rem; /* Match font size with the rest of the page */
-  font-weight: bold;
-}
-
-#login-form {
-  display: flex;
-  flex-direction: column;
-}
-
-#login-form input,
-#login-form button {
-  font-size: 1rem; /* Match font size of input and button to rest of text */
-  padding: 12px 18px;
-  margin: 10px 0;
-}
-
-/* === Chat Form Layout === */
-#chat-form {
-  display: flex;
-  gap: 10px;
-  flex-direction: row;
-}
-
-#chat-form input,
-#chat-form select,
-#chat-form button {
-  padding: 12px 18px;
-  font-size: 1rem;
-}
-
-/* === Responsive Design for Smaller Screens === */
-@media (max-width: 768px) {
-  /* Make login section more mobile-friendly */
-  #login-section {
-    position: relative;
-    top: unset;
-    right: unset;
-    max-width: 100%;
-    margin-top: 20px;
-  }
-
-  .container {
-    padding: 10px;
-  }
-
-  #chat-form {
-    flex-direction: column; /* Stack inputs vertically on smaller screens */
-  }
-
-  #login-section h2 {
-    font-size: 1rem; /* Adjust font size for mobile */
   }
 }
