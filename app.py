@@ -36,19 +36,20 @@ def analyze_mood(text):
 
     return mood
 
+# Expanded keyword dictionary for richer context detection
+CONTEXT_KEYWORDS = {
+    "school": ["exam", "homework", "professor", "class", "lecture", "assignment", "university", "study", "grades", "test", "course", "subject"],
+    "work": ["boss", "office", "job", "deadline", "project", "colleague", "meeting", "promotion", "salary", "workload", "overtime"],
+    "relationship": ["love", "heartbreak", "friend", "family", "crush", "partner", "girlfriend", "boyfriend", "marriage", "breakup"],
+    "life": ["future", "purpose", "life", "dream", "goal", "hope", "plan", "direction", "decision", "meaning", "uncertain"]
+}
+
 # Detect general context of the message
 def detect_context(message):
-    work_keywords = ["job", "work", "deadline", "office", "boss"]
-    school_keywords = ["school", "exam", "teacher", "homework", "project"]
-    life_keywords = ["family", "friends", "relationship", "health", "life"]
-
     message = message.lower()
-    if any(word in message for word in work_keywords):
-        return "work"
-    elif any(word in message for word in school_keywords):
-        return "school"
-    elif any(word in message for word in life_keywords):
-        return "life"
+    for context, keywords in CONTEXT_KEYWORDS.items():
+        if any(keyword in message for keyword in keywords):
+            return context
     return "general"
 
 # Motivational quotes per mood
@@ -94,13 +95,15 @@ def chat():
     mood = analyze_mood(user_message)
     context = detect_context(user_message)
 
-    # Basic reply based on context
-    if context == "work":
-        reply = "Work can be demanding. Is it something your job or tasks are causing?"
-    elif context == "school":
-        reply = "School pressures can pile up quickly. Want to talk about what’s stressing you?"
+    # Context-aware reply
+    if context == "school":
+        reply = "School can be a lot sometimes. Want to talk more about what's happening in class?"
+    elif context == "work":
+        reply = "Work stress is real! Do you want to unpack what’s going on?"
+    elif context == "relationship":
+        reply = "Relationships can be beautiful but complicated. What’s on your heart?"
     elif context == "life":
-        reply = "Life can feel overwhelming. I'm here to listen. Want to share more?"
+        reply = "Thinking about life and the future can be deep. I'm here if you want to explore it together."
     else:
         reply = "I hear you. I'm here for you!"
 
@@ -118,7 +121,8 @@ def chat():
     return jsonify({
         "reply": reply,
         "mood": mood,
-        "sentiment": sentiment
+        "sentiment": sentiment,
+        "context": context
     })
 
 # Save mood to local history
