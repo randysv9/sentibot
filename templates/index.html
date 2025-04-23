@@ -14,110 +14,94 @@
   <!-- Custom CSS (Flask static path) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
+  <div class="container py-4">
+    
+    <!-- Names aligned left and right -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="fw-bold">👤 Randy Villanueva</div>  <!-- Left side -->
+      <div class="fw-bold">💬 Mary Macaraeg</div>  <!-- Right side -->
+    </div>
 
-<!-- Login Section (centered card) -->
-<div id="login-section" class="d-flex justify-content-center align-items-center vh-100">
-  <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
-    <h2 class="text-center mb-4">Login</h2>
-    <form id="login-form">
-      <div class="mb-3">
-        <input type="text" id="username" class="form-control" placeholder="Username" required>
+    <!-- Header Section -->
+    <div class="text-center mb-4">
+      <h1 class="fw-bold">🤖 Sentibot</h1>
+      <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
+    </div>
+
+
+    <!-- Mood History Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-info text-white">🧠 Recent Mood History</div>
+      <div id="mood-history" class="card-body" style="max-height: 200px; overflow-y: auto;">
+        <p class="text-muted">No history yet.</p>
       </div>
-      <div class="mb-3">
-        <input type="password" id="password" class="form-control" placeholder="Password" required>
+      <div class="card-footer text-end">
+        <button id="clear-history-btn" class="btn btn-sm btn-danger" aria-label="Clear Mood History">
+          <i class="fas fa-trash-alt"></i> Clear History
+        </button>
       </div>
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+
+    <!-- Mood Chart Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-secondary text-white">📊 Mood Chart</div>
+      <div class="card-body">
+        <canvas id="moodChart" width="400" height="200" aria-label="Mood Chart"></canvas>
       </div>
-    </form>
-    <p id="login-error" class="text-danger mt-2 text-center"></p>
+    </div>
+
+    
+	<!-- Mood Summary Panel -->
+<div class="card mb-3 shadow-sm">
+  <div class="card-header bg-success text-white">📌 Mood Summary</div>
+  <div id="mood-summary" class="card-body">
+    <p class="text-muted">No summary available yet.</p>
   </div>
 </div>
 
-<!-- Main Content Section (hidden until login) -->
-<div id="app-section" style="display: none;" class="container py-4">
-
-  <button id="logout-btn" style="float:right;">Logout</button>
-  <h2>Welcome, <span id="user-display"></span>!</h2>
-
-  <!-- User Labels -->
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="fw-bold">👤 Randy Villanueva</div>
-  </div>
-  <div class="d-flex justify-content-between align-items-center mb-2">
-    <div class="fw-bold">💬 Mary Macaraeg</div>
-  </div>
-
-  <!-- Header -->
-  <div class="text-center mb-4">
-    <h1 class="fw-bold">🤖 Sentibot</h1>
-    <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
-  </div>
-
-  <!-- Mood History Panel -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-info text-white">🧠 Recent Mood History</div>
-    <div id="mood-history" class="card-body" style="max-height: 200px; overflow-y: auto;">
-      <p class="text-muted">No history yet.</p>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- Chat Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-primary text-white">💬 Chat</div>
+      <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
     </div>
-    <div class="card-footer text-end">
-      <button id="clear-history-btn" class="btn btn-sm btn-danger" aria-label="Clear Mood History">
-        <i class="fas fa-trash-alt"></i> Clear History
+
+    <!-- Chat Form -->
+    <form id="chat-form" class="d-flex gap-2" autocomplete="off">
+      <!-- Mood Dropdown -->
+      <select id="mood-select" class="form-select" aria-label="Select your mood">
+        <option value="" selected disabled>Choose your mood</option>
+        <option value="Excited 🤩">Excited 🤩</option>
+        <option value="Happy 😊">Happy 😊</option>
+        <option value="Relaxed 😎">Relaxed 😎</option>
+        <option value="Neutral 😐">Neutral 😐</option>
+        <option value="Sad 😢">Sad 😢</option>
+        <option value="Anxious 😨">Anxious 😨</option>
+        <option value="Angry 😠">Angry 😠</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <!-- Text Input for Message -->
+      <input type="text" id="user-input" class="form-control" placeholder="Type your message..." required>
+      
+      <button type="submit" class="btn btn-primary" aria-label="Send Message">
+        <i class="fas fa-paper-plane"></i> Send
       </button>
-    </div>
+    </form>
   </div>
 
-  <!-- Mood Chart Panel -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-secondary text-white">📊 Mood Chart</div>
-    <div class="card-body">
-      <canvas id="moodChart" width="400" height="200" aria-label="Mood Chart"></canvas>
-    </div>
-  </div>
-
-  <!-- Mood Summary Panel -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-success text-white">📌 Mood Summary</div>
-    <div id="mood-summary" class="card-body">
-      <p class="text-muted">No summary available yet.</p>
-    </div>
-  </div>
-
-  <!-- Chat Panel -->
-  <div class="card mb-3 shadow-sm">
-    <div class="card-header bg-primary text-white">💬 Chat</div>
-    <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
-  </div>
-
-  <!-- Chat Form -->
-  <form id="chat-form" class="d-flex gap-2" autocomplete="off">
-    <select id="mood-select" class="form-select" aria-label="Select your mood">
-      <option value="" selected disabled>Choose your mood</option>
-      <option value="Excited 🤩">Excited 🤩</option>
-      <option value="Happy 😊">Happy 😊</option>
-      <option value="Relaxed 😎">Relaxed 😎</option>
-      <option value="Neutral 😐">Neutral 😐</option>
-      <option value="Sad 😢">Sad 😢</option>
-      <option value="Anxious 😨">Anxious 😨</option>
-      <option value="Angry 😠">Angry 😠</option>
-      <option value="Other">Other</option>
-    </select>
-    <input type="text" id="user-input" class="form-control" placeholder="Type your message..." required>
-    <button type="submit" class="btn btn-primary" aria-label="Send Message">
-      <i class="fas fa-paper-plane"></i> Send
-    </button>
-  </form>
-
-</div>
-
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='script.js') }}"></script>
-
-<!-- No need for custom login CSS anymore, removed outdated styling -->
-
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
