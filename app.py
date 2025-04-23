@@ -4,19 +4,45 @@ import json
 import os
 from datetime import datetime
 import random
-from collections import defaultdict  # ✅ Added for summary feature
+from collections import defaultdict
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
+app.secret_key = "super_secret_key"  # Use a secure, random key in production!
 
 # Initialize VADER Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
 
+# Dummy credentials
+VALID_USERNAME = "admin"
+VALID_PASSWORD = "pass"
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+
+        if username == VALID_USERNAME and password == VALID_PASSWORD:
+            session["logged_in"] = True
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
+    return render_template("login.html")
+
 @app.route("/")
 def home():
+    if not session.get("logged_in"):
+        return render_template("login.html")
     return render_template("index.html")
 
-# Detect mood using VADER
+@app.route("/logout")
+def logout():
+    session.clear()
+    return render_template("login.html")
+
+# Mood analysis
 def analyze_mood(text):
     sentiment = analyzer.polarity_scores(text)
     compound_score = sentiment['compound']
@@ -38,7 +64,7 @@ def analyze_mood(text):
 
     return mood
 
-# Detect general context of the message
+# Context detection
 def detect_context(message):
     work_keywords = ["job", "work", "deadline", "office", "boss"]
     school_keywords = ["school", "exam", "teacher", "homework", "project"]
@@ -53,7 +79,7 @@ def detect_context(message):
         return "life"
     return "general"
 
-# Motivational quotes per mood
+# Motivational quotes
 quotes = {
     "Sad 😢": [
         "“This too shall pass.”",
@@ -93,18 +119,16 @@ follow_ups = {
 def chat():
     user_message = request.json["message"]
 
-    # Get or initialize chat history in session
     if "history" not in session:
         session["history"] = []
 
     session["history"].append(user_message)
-    session["history"] = session["history"][-5:]  # Keep only last 5 messages
+    session["history"] = session["history"][-5:]  # Last 5 messages only
 
     sentiment = analyzer.polarity_scores(user_message)
     mood = analyze_mood(user_message)
     context = detect_context(user_message)
 
-    # Basic reply based on context
     if context == "work":
         reply = "Work can be demanding. Is it something your job or tasks are causing?"
     elif context == "school":
@@ -114,19 +138,15 @@ def chat():
     else:
         reply = "I hear you. I'm here for you!"
 
-    # Add memory reference if applicable
     if len(session["history"]) > 1:
         reply += f" Earlier you said: “{session['history'][-2]}” — I’m here to help with that too."
 
-    # Add mood-specific follow-up
     if mood in follow_ups:
         reply += " " + random.choice(follow_ups[mood])
 
-    # Add motivational quote
     if mood in quotes:
         reply += " Here's something to lift you up: " + random.choice(quotes[mood])
 
-    # Save mood and message
     save_mood(mood, user_message)
 
     return jsonify({
@@ -136,14 +156,11 @@ def chat():
         "memory": session["history"]
     })
 
-# Save mood to local history
 def save_mood(mood, user_message):
-    user_ip = request.remote_addr  # Identify the user by their IP address (or use a user ID if you have one)
+    user_ip = request.remote_addr
     history = []
-
-    # Check if there's a file for that user
     user_file = f"user_{user_ip}_history.json"
-    
+
     if os.path.exists(user_file):
         with open(user_file, "r") as f:
             history = json.load(f)
@@ -155,7 +172,7 @@ def save_mood(mood, user_message):
     })
 
     with open(user_file, "w") as f:
-        json.dump(history[-10:], f)  # Keep only the last 10 entries for each user
+        json.dump(history[-10:], f)
 
 @app.route("/history")
 def history():
@@ -175,7 +192,6 @@ def clear_session():
     session.pop("history", None)
     return jsonify({"status": "session cleared"})
 
-# ✅ New route: Mood Summary by Day
 @app.route("/summary")
 def daily_summary():
     if not os.path.exists("mood_history.json"):
@@ -187,7 +203,6 @@ def daily_summary():
     summary = defaultdict(lambda: defaultdict(int))
 
     for entry in history:
-        # Date and weekday
         date_str = entry["timestamp"].split(" ")[0]
         weekday = datetime.strptime(date_str, "%Y-%m-%d").strftime("%A")
         mood = entry["mood"]
