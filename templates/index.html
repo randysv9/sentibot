@@ -16,9 +16,8 @@
 </head>
 <body>
 
-
-<!-- Add this just inside <body> -->
-<div id="login-section">
+<!-- Login Section (aligned to right corner) -->
+<div id="login-section" class="login-container">
   <h2>Login</h2>
   <form id="login-form">
     <input type="text" id="username" placeholder="Username" required>
@@ -28,6 +27,7 @@
   <p id="login-error" style="color: red;"></p>
 </div>
 
+<!-- App Section -->
 <div id="app-section" style="display: none;">
   <button id="logout-btn" style="float:right;">Logout</button>
   <h2>Welcome, <span id="user-display"></span>!</h2>
@@ -35,13 +35,8 @@
   <!-- Keep your mood selector, chat box, etc. here -->
 </div>
 
-
-
-
-
-
-
-  <div class="container py-4">
+<!-- Main Content Section -->
+<div class="container py-4">
     
     <!-- Names aligned left and right -->
     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -54,7 +49,6 @@
       <h1 class="fw-bold">🤖 Sentibot</h1>
       <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
     </div>
-
 
     <!-- Mood History Panel -->
     <div class="card mb-3 shadow-sm">
@@ -77,25 +71,15 @@
       </div>
     </div>
 
-    
-	<!-- Mood Summary Panel -->
-<div class="card mb-3 shadow-sm">
-  <div class="card-header bg-success text-white">📌 Mood Summary</div>
-  <div id="mood-summary" class="card-body">
-    <p class="text-muted">No summary available yet.</p>
-  </div>
-</div>
+    <!-- Mood Summary Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-success text-white">📌 Mood Summary</div>
+      <div id="mood-summary" class="card-body">
+        <p class="text-muted">No summary available yet.</p>
+      </div>
+    </div>
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	<!-- Chat Panel -->
+    <!-- Chat Panel -->
     <div class="card mb-3 shadow-sm">
       <div class="card-header bg-primary text-white">💬 Chat</div>
       <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
@@ -123,11 +107,43 @@
         <i class="fas fa-paper-plane"></i> Send
       </button>
     </form>
-  </div>
+</div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+<!-- Custom CSS for Login Section -->
+<style>
+  /* Login section styling */
+  .login-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 16px; /* Adjust the font size to match other texts */
+  }
+
+  .login-container h2 {
+    font-size: 1.5rem; /* Make the login heading the same size */
+  }
+
+  .login-container input,
+  .login-container button {
+    font-size: 16px; /* Keep the font size consistent */
+  }
+
+  /* Add space between the form elements */
+  .login-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Make the button align properly */
+  .login-container button {
+    margin-top: 10px;
+  }
+</style>
+
 </body>
 </html>
