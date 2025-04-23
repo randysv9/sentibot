@@ -97,6 +97,7 @@ function loadMoodHistory() {
       if (data.length === 0) {
         historyDiv.innerHTML = "<p class='text-muted'>No history yet.</p>";
         updateMoodChart([], []);
+        updateMoodSummary([]);
         return;
       }
 
@@ -114,6 +115,7 @@ function loadMoodHistory() {
       });
 
       updateMoodChart(labels, values);
+      updateMoodSummary(data); // Update the summary here
     })
     .catch(err => console.error("Error loading mood history:", err));
 }
@@ -151,6 +153,32 @@ function updateMoodChart(labels, values) {
       }
     }
   });
+}
+
+function updateMoodSummary(history) {
+  const summaryDiv = document.getElementById('mood-summary');
+  if (history.length === 0) {
+    summaryDiv.innerHTML = '<p class="text-muted">No summary available yet.</p>';
+    return;
+  }
+
+  const moodCount = {};
+  history.forEach(entry => {
+    moodCount[entry.mood] = (moodCount[entry.mood] || 0) + 1;
+  });
+
+  const sortedMoods = Object.entries(moodCount).sort((a, b) => b[1] - a[1]);
+  const topMood = sortedMoods[0][0];
+  const topCount = sortedMoods[0][1];
+
+  let summaryHTML = `<p><strong>Most selected mood:</strong> ${topMood} (${topCount} times)</p>`;
+  summaryHTML += '<ul>';
+  for (const [mood, count] of sortedMoods) {
+    summaryHTML += `<li>${mood}: ${count}</li>`;
+  }
+  summaryHTML += '</ul>';
+
+  summaryDiv.innerHTML = summaryHTML;
 }
 
 function clearMoodHistory() {
