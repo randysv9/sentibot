@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import json
 import os
@@ -6,7 +6,6 @@ from datetime import datetime
 import random
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
 # Initialize VADER Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
@@ -37,19 +36,20 @@ def analyze_mood(text):
 
     return mood
 
+# Expanded keyword dictionary for richer context detection
+CONTEXT_KEYWORDS = {
+    "school": ["exam", "homework", "professor", "class", "lecture", "assignment", "university", "study", "grades", "test", "course", "subject"],
+    "work": ["boss", "office", "job", "deadline", "project", "colleague", "meeting", "promotion", "salary", "workload", "overtime"],
+    "relationship": ["love", "heartbreak", "friend", "family", "crush", "partner", "girlfriend", "boyfriend", "marriage", "breakup"],
+    "life": ["future", "purpose", "life", "dream", "goal", "hope", "plan", "direction", "decision", "meaning", "uncertain"]
+}
+
 # Detect general context of the message
 def detect_context(message):
-    work_keywords = ["job", "work", "deadline", "office", "boss"]
-    school_keywords = ["school", "exam", "teacher", "homework", "project"]
-    life_keywords = ["family", "friends", "relationship", "health", "life"]
-
     message = message.lower()
-    if any(word in message for word in work_keywords):
-        return "work"
-    elif any(word in message for word in school_keywords):
-        return "school"
-    elif any(word in message for word in life_keywords):
-        return "life"
+    for context, keywords in CONTEXT_KEYWORDS.items():
+        if any(keyword in message for keyword in keywords):
+            return context
     return "general"
 
 # Motivational quotes per mood
@@ -91,31 +91,21 @@ follow_ups = {
 @app.route("/chat", methods=["POST"])
 def chat():
     user_message = request.json["message"]
-
-    # Get or initialize chat history in session
-    if "history" not in session:
-        session["history"] = []
-
-    session["history"].append(user_message)
-    session["history"] = session["history"][-5:]  # Keep only last 5 messages
-
     sentiment = analyzer.polarity_scores(user_message)
     mood = analyze_mood(user_message)
     context = detect_context(user_message)
 
-    # Basic reply based on context
-    if context == "work":
-        reply = "Work can be demanding. Is it something your job or tasks are causing?"
-    elif context == "school":
-        reply = "School pressures can pile up quickly. Want to talk about what’s stressing you?"
+    # Context-aware reply
+    if context == "school":
+        reply = "School can be a lot sometimes. Want to talk more about what's happening in class?"
+    elif context == "work":
+        reply = "Work stress is real! Do you want to unpack what’s going on?"
+    elif context == "relationship":
+        reply = "Relationships can be beautiful but complicated. What’s on your heart?"
     elif context == "life":
-        reply = "Life can feel overwhelming. I'm here to listen. Want to share more?"
+        reply = "Thinking about life and the future can be deep. I'm here if you want to explore it together."
     else:
         reply = "I hear you. I'm here for you!"
-
-    # Add memory reference if applicable
-    if len(session["history"]) > 1:
-        reply += f" Earlier you said: “{session['history'][-2]}” — I’m here to help with that too."
 
     # Add mood-specific follow-up
     if mood in follow_ups:
@@ -125,14 +115,14 @@ def chat():
     if mood in quotes:
         reply += " Here's something to lift you up: " + random.choice(quotes[mood])
 
-    # Save mood and message
+    # Save entry to history
     save_mood(mood, user_message)
 
     return jsonify({
         "reply": reply,
         "mood": mood,
         "sentiment": sentiment,
-        "memory": session["history"]
+        "context": context
     })
 
 # Save mood to local history
@@ -163,11 +153,6 @@ def clear_history():
     if os.path.exists("mood_history.json"):
         os.remove("mood_history.json")
     return jsonify({"status": "cleared"})
-
-@app.route("/clear-session", methods=["POST"])
-def clear_session():
-    session.pop("history", None)
-    return jsonify({"status": "session cleared"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
