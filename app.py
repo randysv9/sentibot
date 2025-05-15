@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import json
 import os
@@ -9,12 +9,39 @@ from collections import defaultdict  # ✅ Added for summary feature
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
+# Dummy users for login (replace with real user DB in production)
+USER_DATA = {
+    "admin": "admin123",
+    "randy": "password1",
+    "mary": "macaraeg"  # example user to match your "Mary Macaraeg" label
+}
+
 # Initialize VADER Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    logged_in = session.get("logged_in", False)
+    username = session.get("username", "Guest")
+    return render_template("index.html", logged_in=logged_in, username=username)
+
+@app.route("/login", methods=["POST"])
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if username in USER_DATA and USER_DATA[username] == password:
+        session["logged_in"] = True
+        session["username"] = username
+        return redirect(url_for("home"))
+    else:
+        # Could add flash message or error handling here
+        return "Invalid username or password", 401
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
 
 # Detect mood using VADER
 def analyze_mood(text):
