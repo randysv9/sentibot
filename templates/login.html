@@ -27,22 +27,34 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value;
+      errorMsg.textContent = ""; // clear any previous error
+
+      const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
+
+      if (!username || !password) {
+        errorMsg.textContent = "Please enter both username and password.";
+        return;
+      }
 
       try {
         const response = await fetch("/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, password })
         });
+
         const data = await response.json();
-        if (data.success) {
+
+        if (response.ok && data.success) {
           window.location.href = "/";
         } else {
-          errorMsg.textContent = data.message || "Invalid username or password";
+          errorMsg.textContent = data.message || "Invalid username or password.";
         }
-      } catch {
+      } catch (err) {
+        console.error(err);
         errorMsg.textContent = "Error connecting to server.";
       }
     });
