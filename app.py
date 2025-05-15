@@ -9,6 +9,13 @@ from collections import defaultdict  # ✅ Added for summary feature
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
+
 # Dummy users for login (replace with real user DB in production)
 USER_DATA = {
     "admin": "admin123",
