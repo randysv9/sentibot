@@ -30,8 +30,8 @@ def login():
     username = request.form.get("username")
     password = request.form.get("password")
 
-    with open("user.json", "r") as f:
-        users = json.load(f)
+    with open("backend/user.json", "r") as f:
+    users = json.load(f)
 
     for user in users:
         if user["username"] == username and user["password"] == password:
