@@ -26,12 +26,14 @@ def home():
 # ✅ Initialize VADER Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
 
+# ✅ Login route (supports both JSON and form data)
 @app.route("/login", methods=["POST"])
 def login():
-    if not request.is_json:
-        return jsonify({"success": False, "message": "Invalid content type"}), 400
+    if request.is_json:
+        data = request.get_json()
+    else:
+        data = request.form
 
-    data = request.get_json()
     username = data.get("username")
     password = data.get("password")
 
