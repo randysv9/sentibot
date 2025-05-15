@@ -7,7 +7,7 @@ const fs = require("fs");
 const app = express();
 const PORT = 3000;
 
-// Load user and mood data
+// File paths
 const usersFile = path.join(__dirname, "users.json");
 const moodsFile = path.join(__dirname, "moods.json");
 
@@ -23,8 +23,16 @@ app.use(session({
 // Serve static files
 app.use("/static", express.static(path.join(__dirname, "../static")));
 
-// Serve HTML template
+// Serve login page
+app.get("/login.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "../templates/login.html"));
+});
+
+// Protect main page route
 app.get("/", (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/login.html");
+  }
   res.sendFile(path.join(__dirname, "../templates/index.html"));
 });
 
@@ -49,7 +57,7 @@ app.post("/logout", (req, res) => {
   res.json({ success: true });
 });
 
-// Save mood
+// Save mood (chat)
 app.post("/chat", (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: "Not logged in" });
 
