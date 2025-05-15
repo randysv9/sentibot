@@ -30,13 +30,17 @@ def login():
     username = request.form.get("username")
     password = request.form.get("password")
 
-    if username in USER_DATA and USER_DATA[username] == password:
-        session["logged_in"] = True
-        session["username"] = username
-        return redirect(url_for("home"))
-    else:
-        # Could add flash message or error handling here
-        return "Invalid username or password", 401
+    with open("user.json", "r") as f:
+        users = json.load(f)
+
+    for user in users:
+        if user["username"] == username and user["password"] == password:
+            session["logged_in"] = True
+            session["username"] = username
+            return render_template("index.html", logged_in=True, username=username)
+
+    # If no match found
+    return render_template("index.html", error="Invalid username or password", logged_in=False)
 
 @app.route("/logout", methods=["POST"])
 def logout():
