@@ -12,7 +12,9 @@ app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    if "user" in session:
+        return render_template("index.html", username=session["user"])
+    return render_template("login.html")
 
 
 
