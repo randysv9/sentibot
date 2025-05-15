@@ -9,6 +9,10 @@ from collections import defaultdict  # ✅ Added for summary feature
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
+# ✅ Load users from backend/user.json
+def load_users():
+    with open(os.path.join("backend", "user.json"), "r") as f:
+        return json.load(f)
 
 @app.route("/")
 def home():
@@ -16,29 +20,18 @@ def home():
         return render_template("index.html", username=session["user"])
     return render_template("login.html")
 
-
-
-# Dummy users for login (replace with real user DB in production)
-USER_DATA = {
-    "admin": "admin123",
-    "randy": "password1",
-    "mary": "macaraeg"  # example user to match your "Mary Macaraeg" label
-}
-
 # Initialize VADER Sentiment Analyzer
 analyzer = SentimentIntensityAnalyzer()
 
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-    username = data["username"]
-    password = data["password"]
+    username = data.get("username")
+    password = data.get("password")
 
-    with open("backend/user.json", "r") as f:
-        users = json.load(f)  # ✅ This line must be indented
-
+    users = load_users()
     for user in users:
-        if user["username"] == username and user["password"] == password:
+        if user.get("username") == username and user.get("password") == password:
             session["user"] = username
             return jsonify({"success": True})
 
