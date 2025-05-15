@@ -18,15 +18,29 @@
   <div class="container py-4">
     
     <!-- Names aligned left and right with Logout button -->
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <div class="fw-bold">👤 Randy Villanueva</div>
-  <div>
-    <span class="fw-bold me-3">💬 Mary Macaraeg</span>
-    <button id="logout-btn" class="btn btn-sm btn-outline-danger" aria-label="Logout">
-      <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
+{% if logged_in %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="fw-bold">👤 {{ username }}</div>
+    <div>
+      <span class="fw-bold me-3">💬 Mary Macaraeg</span>
+      <form action="{{ url_for('logout') }}" method="post" style="display:inline;">
+        <button type="submit" id="logout-btn" class="btn btn-sm btn-outline-danger" aria-label="Logout">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </form>
+    </div>
   </div>
-</div>
+{% else %}
+  <!-- Login Form Displayed When Not Logged In -->
+  <div class="card p-3 mb-4 shadow-sm">
+    <h5 class="text-center">🔐 Please Login</h5>
+    <form action="{{ url_for('login') }}" method="post" class="d-flex flex-column gap-2">
+      <input type="text" name="username" class="form-control" placeholder="Username" required>
+      <input type="password" name="password" class="form-control" placeholder="Password" required>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</button>
+    </form>
+  </div>
+{% endif %}
 
     <!-- Header Section -->
     <div class="text-center mb-4">
