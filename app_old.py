@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import json
 import os
@@ -9,12 +9,45 @@ from collections import defaultdict  # ✅ Added for summary feature
 app = Flask(__name__)
 app.secret_key = "super_secret_key"  # Use a strong, secret value in production!
 
-# Initialize VADER Sentiment Analyzer
-analyzer = SentimentIntensityAnalyzer()
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    if "user" in session:
+        return render_template("index.html", username=session["user"])
+    return render_template("login.html")
+
+
+
+# Dummy users for login (replace with real user DB in production)
+USER_DATA = {
+    "admin": "admin123",
+    "randy": "password1",
+    "mary": "macaraeg"  # example user to match your "Mary Macaraeg" label
+}
+
+# Initialize VADER Sentiment Analyzer
+analyzer = SentimentIntensityAnalyzer()
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data["username"]
+    password = data["password"]
+
+    with open("backend/user.json", "r") as f:
+        users = json.load(f)  # ✅ This line must be indented
+
+    for user in users:
+        if user["username"] == username and user["password"] == password:
+            session["user"] = username
+            return jsonify({"success": True})
+
+    return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
 
 # Detect mood using VADER
 def analyze_mood(text):
