@@ -55,53 +55,55 @@
 
   <div id="error-msg"></div>
 
-  <form id="login-form">
-    <label for="username">Username:</label>
-    <input id="username" name="username" type="text" required />
 
-    <label for="password">Password:</label>
-    <input id="password" name="password" type="password" required />
 
-    <button type="submit">Login</button>
-  </form>
+ <form id="login-form">
+  <label for="username">Username:</label>
+  <input id="username" name="username" type="text" required />
 
-  <script>
-    const form = document.getElementById('login-form');
-    const errorMsg = document.getElementById('error-msg');
+  <label for="password">Password:</label>
+  <input id="password" name="password" type="password" required />
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorMsg.style.display = 'none';
+  <button type="submit">Login</button>
+  <p id="error-msg" style="color: red; display: none;"></p>
+</form>
 
-      const formData = new FormData(form);
-      const data = {
-        username: formData.get('username'),
-        password: formData.get('password')
-      };
+<script>
+  const form = document.getElementById('login-form');
+  const errorMsg = document.getElementById('error-msg');
 
-      try {
-        const response = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.style.display = 'none';
 
-        const result = await response.json();
+    const formData = new FormData(form);
+    const data = {
+      username: formData.get('username'),
+      password: formData.get('password')
+    };
 
-        if (result.success && result.redirect) {
-          // Redirect user on successful login
-          window.location.href = result.redirect;
-        } else {
-          // Show error message
-          errorMsg.textContent = result.message || 'Login failed. Please try again.';
-          errorMsg.style.display = 'block';
-        }
-      } catch (err) {
-        errorMsg.textContent = 'An error occurred. Please try again later.';
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.redirect) {
+        window.location.href = result.redirect;
+      } else {
+        errorMsg.textContent = result.message || 'Login failed. Please try again.';
         errorMsg.style.display = 'block';
       }
-    });
-  </script>
+    } catch (err) {
+      errorMsg.textContent = 'An error occurred. Please try again later.';
+      errorMsg.style.display = 'block';
+    }
+  });
+</script>
+
 
 </body>
 </html>
