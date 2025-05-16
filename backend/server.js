@@ -45,7 +45,7 @@ app.post("/login", (req, res) => {
 
   if (user) {
     req.session.user = user;
-    res.json({ success: true });
+    res.json({ success: true, redirect: "/" });  // <-- add redirect key here
   } else {
     res.json({ success: false, message: "Invalid credentials" });
   }
