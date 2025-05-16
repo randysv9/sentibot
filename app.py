@@ -42,9 +42,16 @@ def login():
     for user in users:
         if user.get("username") == username and user.get("password") == password:
             session["user"] = username
-            return jsonify({"success": True, "redirect": "/"})  # 👈 Added redirect URL
+            session["role"] = user.get("role")  # ✅ Store role in session
+
+            # Role-based redirect
+            if session["role"] == "admin":
+                return jsonify({"success": True, "redirect": "/admin-dashboard"})
+            else:
+                return jsonify({"success": True, "redirect": "/"})
 
     return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
 
 
 @app.route("/logout", methods=["POST"])
