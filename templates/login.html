@@ -59,5 +59,40 @@
       }
     });
   </script>
+  
+  
+  <script>
+  const form = document.getElementById("login-form");
+  const errorMsg = document.getElementById("error-msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      console.log("Login response:", data); // ✅ Add this
+
+      if (data.success) {
+        window.location.href = "/"; // ✅ This should redirect
+      } else {
+        errorMsg.textContent = data.message || "Invalid username or password";
+      }
+    } catch (err) {
+      console.error("Error:", err); // ✅ Add this
+      errorMsg.textContent = "Error connecting to server.";
+    }
+  });
+</script>
+
+  
+  
 </body>
 </html>
