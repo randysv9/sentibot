@@ -15,13 +15,31 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 
+<script>
+  // Redirect to login if not logged in
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+  if (!isLoggedIn) {
+    window.location.href = "login.html"; // Ensure login.html exists
+  }
+</script>
+
+
+<script>
+  document.getElementById("display-username").textContent = localStorage.getItem("username") || "Guest";
+</script>
+
+
 <body>
   <div class="container py-4">
+
     <!-- Top bar with username and logout -->
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <div class="fw-bold">👤 <span id="username-display">UsernamePlaceholder</span></div>
+	
+      <div class="fw-bold">👤 <span id="display-username"></span></div>
+	  
       <div>
         <span class="fw-bold me-3">💬 Mary Macaraeg</span>
+        <!-- ✅ JavaScript-only logout button -->
         <button type="button" id="logout-btn" class="btn btn-sm btn-outline-danger" aria-label="Logout">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
@@ -91,147 +109,18 @@
         <i class="fas fa-paper-plane"></i> Send
       </button>
     </form>
+
   </div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
+  <script src="script.js"></script>
+
+  <!-- ✅ Logout logic -->
   <script>
-    // Redirect if not logged in
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    const username = localStorage.getItem("username") || "Guest";
-
-    if (!isLoggedIn) {
-      window.location.href = "login.html";
-    }
-
-    // Set username display
-    document.getElementById("username-display").textContent = username;
-
-    // Chart data
-    let moodData = JSON.parse(localStorage.getItem("moodData")) || [];
-
-    // Setup Chart
-    const ctx = document.getElementById('moodChart').getContext('2d');
-    let moodChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: moodData.map(entry => entry.time),
-        datasets: [{
-          label: 'Mood Level',
-          data: moodData.map(entry => entry.level),
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 2,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            suggestedMin: 1,
-            suggestedMax: 5,
-            title: {
-              display: true,
-              text: 'Mood Level (1=Low to 5=High)'
-            }
-          }
-        }
-      }
-    });
-
-    // Mood Level Map
-    const moodLevels = {
-      "Excited 🤩": 5,
-      "Happy 😊": 4,
-      "Relaxed 😎": 3,
-      "Neutral 😐": 3,
-      "Sad 😢": 2,
-      "Anxious 😨": 2,
-      "Angry 😠": 1,
-      "Other": 3
-    };
-
-    // Load chat and mood history
-    function loadHistory() {
-      const chatBox = document.getElementById("chat-box");
-      const moodHistory = document.getElementById("mood-history");
-      const summary = document.getElementById("mood-summary");
-
-      const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-
-      chatBox.innerHTML = "";
-      moodHistory.innerHTML = "";
-      if (chatHistory.length === 0) {
-        chatBox.innerHTML = "<p class='text-muted'>No chat yet.</p>";
-        moodHistory.innerHTML = "<p class='text-muted'>No history yet.</p>";
-        summary.innerHTML = "<p class='text-muted'>No summary available yet.</p>";
-        return;
-      }
-
-      let total = 0;
-      chatHistory.forEach(entry => {
-        const chatItem = document.createElement("p");
-        chatItem.textContent = `${entry.time} - ${entry.username}: (${entry.mood}) ${entry.message}`;
-        chatBox.appendChild(chatItem);
-
-        const moodItem = document.createElement("li");
-        moodItem.textContent = `${entry.time} - Mood: ${entry.mood}`;
-        moodHistory.appendChild(moodItem);
-
-        total += moodLevels[entry.mood] || 3;
-      });
-
-      const avgMood = (total / chatHistory.length).toFixed(2);
-      summary.innerHTML = `<p>Average Mood Level: <strong>${avgMood}</strong> out of 5</p>`;
-    }
-
-    loadHistory();
-
-    // Handle Chat Form
-    document.getElementById("chat-form").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const mood = document.getElementById("mood-select").value;
-      const message = document.getElementById("user-input").value.trim();
-
-      if (!mood || !message) return;
-
-      const time = new Date().toLocaleTimeString();
-      const chatEntry = { time, mood, message, username };
-
-      // Save to local storage
-      const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      chatHistory.push(chatEntry);
-      localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-
-      // Update mood chart
-      moodData.push({ time, level: moodLevels[mood] });
-      localStorage.setItem("moodData", JSON.stringify(moodData));
-
-      // Refresh UI
-      moodChart.data.labels.push(time);
-      moodChart.data.datasets[0].data.push(moodLevels[mood]);
-      moodChart.update();
-
-      loadHistory();
-
-      document.getElementById("user-input").value = "";
-      document.getElementById("mood-select").value = "";
-    });
-
-    // Clear History
-    document.getElementById("clear-history-btn").addEventListener("click", function () {
-      localStorage.removeItem("chatHistory");
-      localStorage.removeItem("moodData");
-      location.reload();
-    });
-
-    // Logout
     document.getElementById("logout-btn").addEventListener("click", function () {
       localStorage.removeItem("isLoggedIn");
-      localStorage.removeItem("username");
       window.location.href = "login.html";
     });
   </script>
