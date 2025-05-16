@@ -27,6 +27,7 @@ def home():
 analyzer = SentimentIntensityAnalyzer()
 
 # ✅ Login route (supports both JSON and form data)
+
 @app.route("/login", methods=["POST"])
 def login():
     if request.is_json:
@@ -41,9 +42,10 @@ def login():
     for user in users:
         if user.get("username") == username and user.get("password") == password:
             session["user"] = username
-            return jsonify({"success": True})
+            return jsonify({"success": True, "redirect": "/"})  # 👈 Added redirect URL
 
     return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
 
 @app.route("/logout", methods=["POST"])
 def logout():
