@@ -38,10 +38,12 @@
       })
       .then(response => response.json())
       .then(data => {
-        if (data.success) {
+       
+	   if (data.success) {
           localStorage.setItem("isLoggedIn", "true");
           localStorage.setItem("username", username);
-          window.location.href = "index.html";
+          window.location.href = "/";
+		  
         } else {
           const errDiv = document.getElementById("error-msg");
           errDiv.textContent = data.message || "Invalid username or password.";
