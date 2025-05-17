@@ -183,31 +183,6 @@ def daily_summary():
     return jsonify(summary)
 
 
-
-@app.route('/store_mood', methods=['POST'])
-def store_mood():
-    data = request.get_json()
-    message = data.get("message", "").lower()
-
-    mood_map = {
-        "excited": "Excited 🤩",
-        "happy": "Happy 😊",
-        "relaxed": "Relaxed 😎",
-        "neutral": "Neutral 😐",
-        "sad": "Sad 😢",
-        "anxious": "Anxious 😨",
-        "angry": "Angry 😠",
-    }
-
-    detected_mood = next((label for key, label in mood_map.items() if key in message), "Neutral 😐")
-
-    # (Optional) Save the mood to the database here
-
-    return jsonify(success=True, mood=detected_mood)
-
-
-
-
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 10000))  # Render sets PORT env variable
