@@ -41,12 +41,7 @@ def admin_dashboard():
     return redirect("/")
 
 
-# @app.route("/login-page")
-# def login_page():
-  #  return render_template("login.html")
-  
-  
-  @app.route("/login-page")
+@app.route("/login-page")
 def login_page():
     if "user" in session:
         # User already logged in, redirect to homepage or admin dashboard
@@ -54,11 +49,6 @@ def login_page():
             return redirect("/admin-dashboard")
         return redirect("/")
     return render_template("login.html")
-
-
-
-
-
 
 
 @app.route("/login", methods=["POST"])
