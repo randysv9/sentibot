@@ -5,7 +5,9 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
-const PORT = 3000;
+
+const PORT = process.env.PORT || 3000;
+
 
 // Initialize SQLite database
 
@@ -123,6 +125,6 @@ function extractMoodFromMessage(message) {
 // The rest of your code (moods logging) still uses JSON files, update later if needed
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
