@@ -51,8 +51,10 @@ def login():
     else:
         data = request.form
 
-    username = data.get("username")
-    password = data.get("password")
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+
+    print(f"[DEBUG] Received login - username: '{username}', password: '{password}'")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -61,6 +63,7 @@ def login():
     conn.close()
 
     if user:
+        print(f"[DEBUG] User found in database: {dict(user)}")
         session["user"] = user["username"]
         session["role"] = user["role"]
 
@@ -69,7 +72,9 @@ def login():
         else:
             return jsonify({"success": True, "redirect": "/"})
     else:
+        print("[DEBUG] No matching user found in database.")
         return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
 
 
 @app.route("/logout")
