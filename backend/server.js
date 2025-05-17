@@ -6,48 +6,37 @@ const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-
-
 // Initialize SQLite database
-
 const db = new sqlite3.Database(path.join(__dirname, "users.db"), (err) => {
   if (err) {
     console.error("Error opening database", err.message);
   } else {
     console.log("Connected to SQLite database.");
-
-
-// Create users table and insert a sample user (only if not exists)
-
-db.serialize(() => {
-      db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT UNIQUE,
-          password TEXT
-        )
-      `);
-
-
-  // Insert sample user for testing - change username/password as needed
-  db.run(
-        `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
-        ["admin", "admin123"],
-        (err) => {
-          if (err) {
-            console.error("Error inserting sample user:", err.message);
-          } else {
-            console.log("Sample user checked/added.");
-          }
-        }
-      );
-    });
   }
 });
 
+// Setup database
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT
+    )
+  `);
 
-
+  db.run(
+    `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
+    ["admin", "admin123"],
+    (err) => {
+      if (err) {
+        console.error("Error inserting sample user:", err.message);
+      } else {
+        console.log("Sample user checked/added.");
+      }
+    }
+  );
+});
 
 // Middleware
 app.use(bodyParser.json());
@@ -68,7 +57,7 @@ app.get("/login.html", (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/login.html"));
 });
 
-// Protect main page route
+// Protected main page
 app.get("/", (req, res) => {
   if (!req.session.user) {
     return res.redirect("/login.html");
@@ -76,7 +65,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/index.html"));
 });
 
-// Login route using SQLite
+// Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -99,13 +88,13 @@ app.post("/login", (req, res) => {
   );
 });
 
-// Logout route
+// Logout
 app.post("/logout", (req, res) => {
   req.session.destroy();
   res.json({ success: true });
 });
 
-// Fake mood extraction logic (keep as-is)
+// Mood logic
 function extractMoodFromMessage(message) {
   const moodMap = {
     excited: "Excited 🤩",
@@ -122,9 +111,8 @@ function extractMoodFromMessage(message) {
     : "Neutral 😐";
 }
 
-// The rest of your code (moods logging) still uses JSON files, update later if needed
-
 // Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
