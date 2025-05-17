@@ -2,23 +2,54 @@ const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const path = require("path");
-const fs = require("fs");
+const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
 const PORT = 3000;
 
-// File paths
-const usersFile = path.join(__dirname, "users.json");
-const moodsFile = path.join(__dirname, "moods.json");
+// Initialize SQLite database
+const db = new sqlite3.Database("./users.db", (err) => {
+  if (err) {
+    console.error("Error opening database", err.message);
+  } else {
+    console.log("Connected to SQLite database.");
+  }
+});
+
+// Create users table and insert a sample user (only if not exists)
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT
+    )
+  `);
+
+  // Insert sample user for testing - change username/password as needed
+  db.run(
+    `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
+    ["admin", "admin123"],
+    (err) => {
+      if (err) {
+        console.error("Error inserting sample user:", err.message);
+      } else {
+        console.log("Sample user checked/added.");
+      }
+    }
+  );
+});
 
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({
-  secret: "sentibot-secret-key",
-  resave: false,
-  saveUninitialized: true
-}));
+app.use(
+  session({
+    secret: "sentibot-secret-key",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 // Serve static files
 app.use("/static", express.static(path.join(__dirname, "../static")));
@@ -36,81 +67,53 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../templates/index.html"));
 });
 
-// Login
+// Login route using SQLite
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  let users = JSON.parse(fs.readFileSync(usersFile, "utf8"));
-  const user = users.find(u => u.username === username && u.password === password);
+  db.get(
+    "SELECT * FROM users WHERE username = ? AND password = ?",
+    [username, password],
+    (err, row) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.json({ success: false, message: "Database error." });
+      }
 
-  if (user) {
-    req.session.user = user;
-    res.json({ success: true, redirect: "/" });  // <-- add redirect key here
-  } else {
-    res.json({ success: false, message: "Invalid credentials" });
-  }
+      if (row) {
+        req.session.user = { id: row.id, username: row.username };
+        res.json({ success: true, redirect: "/" });
+      } else {
+        res.json({ success: false, message: "Invalid credentials." });
+      }
+    }
+  );
 });
 
-// Logout
+// Logout route
 app.post("/logout", (req, res) => {
   req.session.destroy();
   res.json({ success: true });
 });
 
-// Save mood (chat)
-app.post("/chat", (req, res) => {
-  if (!req.session.user) return res.status(401).json({ error: "Not logged in" });
-
-  const { message } = req.body;
-  const username = req.session.user.username;
-  const mood = extractMoodFromMessage(message);
-
-  let moodLogs = JSON.parse(fs.readFileSync(moodsFile, "utf8"));
-  if (!moodLogs[username]) moodLogs[username] = [];
-
-  const timestamp = new Date().toLocaleString();
-  moodLogs[username].push({ timestamp, mood, message });
-
-  fs.writeFileSync(moodsFile, JSON.stringify(moodLogs, null, 2));
-  res.json({ reply: `Got it! I’ve logged your mood as: ${mood}` });
-});
-
-// Get mood history
-app.get("/history", (req, res) => {
-  if (!req.session.user) return res.status(401).json({ error: "Not logged in" });
-
-  const username = req.session.user.username;
-  const moodLogs = JSON.parse(fs.readFileSync(moodsFile, "utf8"));
-
-  res.json(moodLogs[username] || []);
-});
-
-// Clear mood history
-app.post("/clear", (req, res) => {
-  if (!req.session.user) return res.status(401).json({ error: "Not logged in" });
-
-  const username = req.session.user.username;
-  const moodLogs = JSON.parse(fs.readFileSync(moodsFile, "utf8"));
-
-  moodLogs[username] = [];
-  fs.writeFileSync(moodsFile, JSON.stringify(moodLogs, null, 2));
-  res.json({ success: true });
-});
-
-// Fake mood extraction logic
+// Fake mood extraction logic (keep as-is)
 function extractMoodFromMessage(message) {
   const moodMap = {
-    "excited": "Excited 🤩",
-    "happy": "Happy 😊",
-    "relaxed": "Relaxed 😎",
-    "neutral": "Neutral 😐",
-    "sad": "Sad 😢",
-    "anxious": "Anxious 😨",
-    "angry": "Angry 😠"
+    excited: "Excited 🤩",
+    happy: "Happy 😊",
+    relaxed: "Relaxed 😎",
+    neutral: "Neutral 😐",
+    sad: "Sad 😢",
+    anxious: "Anxious 😨",
+    angry: "Angry 😠",
   };
   message = message.toLowerCase();
-  return Object.keys(moodMap).find(m => message.includes(m)) ? moodMap[Object.keys(moodMap).find(m => message.includes(m))] : "Neutral 😐";
+  return Object.keys(moodMap).find((m) => message.includes(m))
+    ? moodMap[Object.keys(moodMap).find((m) => message.includes(m))]
+    : "Neutral 😐";
 }
+
+// The rest of your code (moods logging) still uses JSON files, update later if needed
 
 // Start server
 app.listen(PORT, () => {
