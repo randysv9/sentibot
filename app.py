@@ -7,35 +7,25 @@ import os
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # Replace with a secure key in production
 
-# ====================== CONFIGURATION ======================
-
-# Path to the database on a persistent Render disk
-DB_PATH = "/mnt/data/database.db"
-
+DB_PATH = "/tmp/database.db"  # Use /tmp for writable file storage on Render free tier
 
 # ====================== DATABASE SETUP ======================
 
 def init_db():
     if not os.path.exists(DB_PATH):
-        print("Database not found. Initializing...")
+        print(f"Database not found at {DB_PATH}. Initializing...")
         conn = sqlite3.connect(DB_PATH)
         with open("schema.sql") as f:
             conn.executescript(f.read())
         conn.close()
         print("Database initialized.")
     else:
-        print("Database already exists.")
-
+        print(f"Database found at {DB_PATH}.")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-# Initialize database at startup, even in production
-init_db()
-
 
 # ====================== ROUTES ======================
 
@@ -45,13 +35,11 @@ def index():
         return redirect("/login-page")
     return render_template("index.html")
 
-
 @app.route("/admin-dashboard")
 def admin_dashboard():
     if session.get("role") == "admin":
         return render_template("admin.html")
     return redirect("/")
-
 
 @app.route("/login-page")
 def login_page():
@@ -60,7 +48,6 @@ def login_page():
             return redirect("/admin-dashboard")
         return redirect("/")
     return render_template("login.html")
-
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -89,12 +76,10 @@ def login():
     else:
         return jsonify({"success": False, "message": "Invalid username or password."}), 401
 
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login-page")
-
 
 @app.route("/detect", methods=["POST"])
 def detect():
@@ -105,7 +90,6 @@ def detect():
     mood = analyze_mood(user_message)
     save_mood(mood, user_message)
     return jsonify({"mood": mood})
-
 
 @app.route("/history")
 def history():
@@ -121,7 +105,6 @@ def history():
     history = [{"timestamp": row["timestamp"], "mood": row["mood"], "message": row["message"]} for row in rows]
     return jsonify(history)
 
-
 @app.route("/clear", methods=["POST"])
 def clear_history():
     if "user" not in session:
@@ -133,7 +116,6 @@ def clear_history():
     conn.commit()
     conn.close()
     return jsonify({"success": True})
-
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -147,7 +129,6 @@ def chat():
 
     reply = f"I understand you're feeling {mood}. I'm here for you!"
     return jsonify({"reply": reply})
-
 
 @app.route("/summary")
 def daily_summary():
@@ -165,7 +146,6 @@ def daily_summary():
 
     return jsonify(summary)
 
-
 # ====================== UTILITIES ======================
 
 def analyze_mood(text):
@@ -181,7 +161,6 @@ def analyze_mood(text):
     else:
         return "neutral"
 
-
 def save_mood(mood, user_message):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -195,9 +174,9 @@ def save_mood(mood, user_message):
     conn.commit()
     conn.close()
 
-
-# ====================== MAIN (For Local Testing Only) ======================
+# ====================== MAIN ======================
 
 if __name__ == "__main__":
+    init_db()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
