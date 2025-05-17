@@ -7,22 +7,34 @@ import os
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"  # Replace with a secure key in production
 
+# ====================== CONFIGURATION ======================
+
+# Path to the database on a persistent Render disk
+DB_PATH = "/mnt/data/database.db"
+
 
 # ====================== DATABASE SETUP ======================
 
 def init_db():
-    if not os.path.exists("database.db"):
-        conn = sqlite3.connect("database.db")
+    if not os.path.exists(DB_PATH):
+        print("Database not found. Initializing...")
+        conn = sqlite3.connect(DB_PATH)
         with open("schema.sql") as f:
             conn.executescript(f.read())
         conn.close()
-        print("Initialized new database.")
+        print("Database initialized.")
+    else:
+        print("Database already exists.")
 
 
 def get_db_connection():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# Initialize database at startup, even in production
+init_db()
 
 
 # ====================== ROUTES ======================
@@ -44,7 +56,6 @@ def admin_dashboard():
 @app.route("/login-page")
 def login_page():
     if "user" in session:
-        # User already logged in, redirect to homepage or admin dashboard
         if session.get("role") == "admin":
             return redirect("/admin-dashboard")
         return redirect("/")
@@ -71,7 +82,6 @@ def login():
         session["user"] = user["username"]
         session["role"] = user["role"]
 
-        # Return appropriate redirect path based on role
         if user["role"] == "admin":
             return jsonify({"success": True, "redirect": "/admin-dashboard"})
         else:
@@ -186,9 +196,8 @@ def save_mood(mood, user_message):
     conn.close()
 
 
-# ====================== MAIN ======================
+# ====================== MAIN (For Local Testing Only) ======================
 
 if __name__ == "__main__":
-    init_db()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
