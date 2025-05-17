@@ -8,7 +8,11 @@ const app = express();
 const PORT = 3000;
 
 // Initialize SQLite database
-const db = new sqlite3.Database("./users.db", (err) => {
+
+const db = new sqlite3.Database(path.join(__dirname, "users.db"), (err) => {
+
+	
+	
   if (err) {
     console.error("Error opening database", err.message);
   } else {
