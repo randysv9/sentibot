@@ -1,32 +1,48 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-import json
-import os
+from flask import Flask, render_template, request, jsonify, session, redirect
 from datetime import datetime
-import random
 from collections import defaultdict
+import sqlite3
+import os
+
+
+def init_db():
+    if not os.path.exists("database.db"):
+        conn = sqlite3.connect("database.db")
+        with open("schema.sql") as f:
+            conn.executescript(f.read())
+        conn.close()
+        print("Initialized new database.")
+
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key"  # 🔒 Replace with a secure random key in production!
+app.secret_key = "your_secret_key_here"
 
-# ✅ Load users from backend/user.json
-def load_users():
-    path = os.path.join("backend", "user.json")
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
-    return []  # 🔁 Prevent crash if file doesn't exist
+
+def get_db_connection():
+    conn = sqlite3.connect("database.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 @app.route("/")
-def home():
-    if "user" in session:
-        return render_template("index.html", username=session["user"])
+def index():
+    if "user" not in session:
+        return redirect("/login-page")
+    return render_template("index.html")
+
+
+@app.route("/admin-dashboard")
+def admin_dashboard():
+    if session.get("role") == "admin":
+        return render_template("admin.html")
+    else:
+        return redirect("/")
+
+
+@app.route("/login-page")
+def login_page():
     return render_template("login.html")
 
-# ✅ Initialize VADER Sentiment Analyzer
-analyzer = SentimentIntensityAnalyzer()
-
-# ✅ Login route (supports both JSON and form data)
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -38,216 +54,126 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    users = load_users()
-    for user in users:
-        if user.get("username") == username and user.get("password") == password:
-            session["user"] = username
-            session["role"] = user.get("role")  # ✅ Store role in session
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+    user = cursor.fetchone()
+    conn.close()
 
-            # Role-based redirect
-            if session["role"] == "admin":
-                return jsonify({"success": True, "redirect": "/admin-dashboard"})
-            else:
-                return jsonify({"success": True, "redirect": "/"})
+    if user:
+        session["user"] = user["username"]
+        session["role"] = user["role"]
 
-    return jsonify({"success": False, "message": "Invalid username or password"}), 401
+        if user["role"] == "admin":
+            return jsonify({"success": True, "redirect": "/admin-dashboard"})
+        else:
+            return jsonify({"success": True, "redirect": "/"})
+    else:
+        return jsonify({"success": False, "message": "Invalid username or password"}), 401
 
 
-
-@app.route("/logout", methods=["POST"])
+@app.route("/logout")
 def logout():
     session.clear()
-    return jsonify({"success": True, "message": "Logged out."})
+    return redirect("/login-page")
 
-# ✅ Detect mood using VADER
-def analyze_mood(text):
-    sentiment = analyzer.polarity_scores(text)
-    compound_score = sentiment['compound']
 
-    if compound_score >= 0.6:
-        return "Excited 🤩"
-    elif compound_score >= 0.3:
-        return "Happy 😊"
-    elif 0.1 <= compound_score < 0.3:
-        return "Relaxed 😎"
-    elif -0.2 < compound_score < 0.2:
-        return "Neutral 😐"
-    elif compound_score <= -0.5:
-        return "Angry 😠"
-    elif compound_score <= -0.3:
-        return "Anxious 😨"
-    else:
-        return "Sad 😢"
+@app.route("/detect", methods=["POST"])
+def detect():
+    user_message = request.json["message"]
+    mood = analyze_mood(user_message)
+    save_mood(mood, user_message)
+    return jsonify({"mood": mood})
 
-# ✅ Context detection
-def detect_context(message):
-    work_keywords = ["job", "work", "deadline", "office", "boss"]
-    school_keywords = ["school", "exam", "teacher", "homework", "project"]
-    life_keywords = ["family", "friends", "relationship", "health", "life"]
 
-    message = message.lower()
-    if any(word in message for word in work_keywords):
-        return "work"
-    elif any(word in message for word in school_keywords):
-        return "school"
-    elif any(word in message for word in life_keywords):
-        return "life"
-    return "general"
+@app.route("/history")
+def history():
+    if "user" not in session:
+        return jsonify([])
 
-# ✅ Motivational quotes
-quotes = {
-    "Sad 😢": [
-        "“This too shall pass.”",
-        "“You are stronger than you think.”",
-        "“Every storm runs out of rain.”"
-    ],
-    "Angry 😠": [
-        "“Holding onto anger is like drinking poison.”",
-        "“Breathe. Relax. You got this.”"
-    ],
-    "Anxious 😨": [
-        "“Inhale peace, exhale stress.”",
-        "“One step at a time.”"
-    ]
-}
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp, mood, message FROM mood_history WHERE username = ? ORDER BY timestamp DESC", (session["user"],))
+    rows = cursor.fetchall()
+    conn.close()
 
-# ✅ Follow-ups
-follow_ups = {
-    "Sad 😢": [
-        "Would you like to talk more about it?",
-        "What’s been on your mind lately?",
-        "Is there something that triggered this sadness?"
-    ],
-    "Angry 😠": [
-        "Do you want to vent about it?",
-        "What made you feel this way?",
-        "Sometimes writing it out helps. What's going on?"
-    ],
-    "Anxious 😨": [
-        "Would it help to talk through it?",
-        "Is there a specific worry on your mind?",
-        "Let's try to break it down together."
-    ]
-}
+    history = [{"timestamp": row["timestamp"], "mood": row["mood"], "message": row["message"]} for row in rows]
+    return jsonify(history)
+
+
+@app.route("/clear", methods=["POST"])
+def clear_history():
+    if "user" not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM mood_history WHERE username = ?", (session["user"],))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    if not request.is_json:
-        return jsonify({"error": "Invalid content type"}), 400
+    if "user" not in session:
+        return jsonify({"reply": "Please log in to continue."}), 401
 
-    user_message = request.json.get("message", "").strip()
-    if not user_message:
-        return jsonify({"error": "Message is required"}), 400
-
-    # Init history
-    if "history" not in session:
-        session["history"] = []
-
-    session["history"].append(user_message)
-    session["history"] = session["history"][-5:]  # Keep only last 5
-
-    sentiment = analyzer.polarity_scores(user_message)
+    data = request.get_json()
+    user_message = data.get("message", "")
     mood = analyze_mood(user_message)
-    context = detect_context(user_message)
-
-    # Generate reply
-    if context == "work":
-        reply = "Work can be demanding. Is it something your job or tasks are causing?"
-    elif context == "school":
-        reply = "School pressures can pile up quickly. Want to talk about what’s stressing you?"
-    elif context == "life":
-        reply = "Life can feel overwhelming. I'm here to listen. Want to share more?"
-    else:
-        reply = "I hear you. I'm here for you!"
-
-    # Add reference to earlier message
-    if len(session["history"]) > 1:
-        reply += f" Earlier you said: “{session['history'][-2]}” — I’m here to help with that too."
-
-    # Add follow-up
-    if mood in follow_ups:
-        reply += " " + random.choice(follow_ups[mood])
-
-    # Add quote
-    if mood in quotes:
-        reply += " Here's something to lift you up: " + random.choice(quotes[mood])
-
-    # Save mood history
     save_mood(mood, user_message)
 
-    return jsonify({
-        "reply": reply,
-        "mood": mood,
-        "sentiment": sentiment,
-        "memory": session["history"]
-    })
+    reply = f"I understand you're feeling {mood}. I'm here for you!"
+    return jsonify({"reply": reply})
 
-# ✅ Save mood data
+
+def analyze_mood(text):
+    text = text.lower()
+    if any(word in text for word in ["happy", "glad", "joy", "excited", "great", "good", "fantastic", "grateful"]):
+        return "happy"
+    elif any(word in text for word in ["sad", "depressed", "unhappy", "down", "blue", "miserable"]):
+        return "sad"
+    elif any(word in text for word in ["angry", "mad", "furious", "irritated", "annoyed"]):
+        return "angry"
+    elif any(word in text for word in ["anxious", "nervous", "worried", "scared", "afraid"]):
+        return "anxious"
+    else:
+        return "neutral"
+
+
 def save_mood(mood, user_message):
-    history = []
-    path = "mood_history.json"
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            try:
-                history = json.load(f)
-            except json.JSONDecodeError:
-                history = []
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    username = session.get("user", "guest")
 
-    history.append({
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "mood": mood,
-        "message": user_message
-    })
+    cursor.execute("INSERT INTO mood_history (username, timestamp, mood, message) VALUES (?, ?, ?, ?)",
+                   (username, timestamp, mood, user_message))
 
-    with open(path, "w") as f:
-        json.dump(history[-10:], f, indent=2)
+    conn.commit()
+    conn.close()
 
-# ✅ Get mood history
-@app.route("/history")
-def history():
-    if os.path.exists("mood_history.json"):
-        with open("mood_history.json", "r") as f:
-            try:
-                return jsonify(json.load(f))
-            except json.JSONDecodeError:
-                return jsonify([])
-    return jsonify([])
 
-@app.route("/clear-history", methods=["POST"])
-def clear_history():
-    path = "mood_history.json"
-    if os.path.exists(path):
-        os.remove(path)
-    return jsonify({"status": "cleared"})
-
-@app.route("/clear-session", methods=["POST"])
-def clear_session():
-    session.pop("history", None)
-    return jsonify({"status": "session cleared"})
-
-# ✅ Mood Summary
 @app.route("/summary")
 def daily_summary():
-    if not os.path.exists("mood_history.json"):
-        return jsonify({})
-
-    with open("mood_history.json", "r") as f:
-        try:
-            history = json.load(f)
-        except json.JSONDecodeError:
-            return jsonify({})
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     summary = defaultdict(lambda: defaultdict(int))
+    cursor.execute("SELECT timestamp, mood FROM mood_history")
+    rows = cursor.fetchall()
+    conn.close()
 
-    for entry in history:
-        date_str = entry["timestamp"].split(" ")[0]
-        mood = entry["mood"]
+    for row in rows:
+        date_str = row["timestamp"].split(" ")[0]
+        mood = row["mood"]
         summary[date_str][mood] += 1
 
     return jsonify(summary)
 
-# ✅ App runner
+
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    init_db()
+    app.run(debug=True)

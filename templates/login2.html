@@ -12,7 +12,7 @@
   <div class="container py-5" style="max-width: 400px;">
     <h2 class="text-center mb-4">🔐 Login to Sentibot</h2>
 
-    <!-- Show error if any -->
+    <!-- Error message -->
     <div id="error-msg" class="alert alert-danger d-none"></div>
 
     <form id="login-form" class="d-flex flex-column gap-3">
@@ -24,18 +24,25 @@
     </form>
   </div>
 
-  <!-- Show error from query param -->
+  <!-- Simple client-side login logic -->
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const error = params.get('error');
-    if (error) {
-      const errDiv = document.getElementById('error-msg');
-      errDiv.textContent = decodeURIComponent(error);
-      errDiv.classList.remove('d-none');
-    }
-  </script>
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
 
-  <!-- Load your external login script -->
-  <script src="/static/login.js"></script>
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      // Simple hardcoded check (replace with real backend validation if needed)
+      if (username === "admin" && password === "1234") {
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("username", username); // Optional: used to display on dashboard
+        window.location.href = "index.html";
+      } else {
+        const errDiv = document.getElementById("error-msg");
+        errDiv.textContent = "Invalid username or password.";
+        errDiv.classList.remove("d-none");
+      }
+    });
+  </script>
 </body>
 </html>
