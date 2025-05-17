@@ -14,11 +14,6 @@ def init_db():
         print("Initialized new database.")
 
 
-
-
-
-
-
 app = Flask(__name__)
 app.secret_key = "your_secret_key_here"
 
@@ -89,9 +84,9 @@ def detect():
     mood = analyze_mood(user_message)
     save_mood(mood, user_message)
     return jsonify({"mood": mood})
-    
-    
-    @app.route("/history")
+
+
+@app.route("/history")
 def history():
     if "user" not in session:
         return jsonify([])
@@ -105,6 +100,7 @@ def history():
     history = [{"timestamp": row["timestamp"], "mood": row["mood"], "message": row["message"]} for row in rows]
     return jsonify(history)
 
+
 @app.route("/clear", methods=["POST"])
 def clear_history():
     if "user" not in session:
@@ -117,8 +113,8 @@ def clear_history():
     conn.close()
     return jsonify({"success": True})
 
-    
-   @app.route("/chat", methods=["POST"])
+
+@app.route("/chat", methods=["POST"])
 def chat():
     if "user" not in session:
         return jsonify({"reply": "Please log in to continue."}), 401
@@ -128,12 +124,8 @@ def chat():
     mood = analyze_mood(user_message)
     save_mood(mood, user_message)
 
-    # Simple echo response; replace with more advanced logic as needed
     reply = f"I understand you're feeling {mood}. I'm here for you!"
     return jsonify({"reply": reply})
- 
-    
-    
 
 
 def analyze_mood(text):
