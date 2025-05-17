@@ -10,39 +10,42 @@ const PORT = 3000;
 // Initialize SQLite database
 
 const db = new sqlite3.Database(path.join(__dirname, "users.db"), (err) => {
-
-	
-	
   if (err) {
     console.error("Error opening database", err.message);
   } else {
     console.log("Connected to SQLite database.");
-  }
-});
+
 
 // Create users table and insert a sample user (only if not exists)
+
 db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT
-    )
-  `);
+      db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE,
+          password TEXT
+        )
+      `);
+
 
   // Insert sample user for testing - change username/password as needed
   db.run(
-    `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
-    ["admin", "admin123"],
-    (err) => {
-      if (err) {
-        console.error("Error inserting sample user:", err.message);
-      } else {
-        console.log("Sample user checked/added.");
-      }
-    }
-  );
+        `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
+        ["admin", "admin123"],
+        (err) => {
+          if (err) {
+            console.error("Error inserting sample user:", err.message);
+          } else {
+            console.log("Sample user checked/added.");
+          }
+        }
+      );
+    });
+  }
 });
+
+
+
 
 // Middleware
 app.use(bodyParser.json());
