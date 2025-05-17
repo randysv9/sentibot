@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentibot - Mood Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<script>
+  // Redirect to login if not logged in
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+  if (!isLoggedIn) {
+    window.location.href = "login.html"; // Ensure login.html exists
+  }
+</script>
+
+
+<script>
+  document.getElementById("display-username").textContent = localStorage.getItem("username") || "Guest";
+</script>
+
+
+<body>
+  <div class="container py-4">
+
+    <!-- Top bar with username and logout -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+	
+      <div class="fw-bold">👤 <span id="display-username"></span></div>
+	  
+      <div>
+        <span class="fw-bold me-3">💬 Mary Macaraeg</span>
+        <!-- ✅ JavaScript-only logout button -->
+        <button type="button" id="logout-btn" class="btn btn-sm btn-outline-danger" aria-label="Logout">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-4">
+      <h1 class="fw-bold">🤖 Sentibot</h1>
+      <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
+    </div>
+
+    <!-- Mood History Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-info text-white">🧠 Recent Mood History</div>
+      <div id="mood-history" class="card-body" style="max-height: 200px; overflow-y: auto;">
+        <p class="text-muted">No history yet.</p>
+      </div>
+      <div class="card-footer text-end">
+        <button id="clear-history-btn" class="btn btn-sm btn-danger" aria-label="Clear Mood History">
+          <i class="fas fa-trash-alt"></i> Clear History
+        </button>
+      </div>
+    </div>
+
+    <!-- Mood Chart Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-secondary text-white">📊 Mood Chart</div>
+      <div class="card-body">
+        <canvas id="moodChart" width="400" height="200" aria-label="Mood Chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Mood Summary Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-success text-white">📌 Mood Summary</div>
+      <div id="mood-summary" class="card-body">
+        <p class="text-muted">No summary available yet.</p>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header bg-primary text-white">💬 Chat</div>
+      <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
+    </div>
+
+    <!-- Chat Form -->
+    <form id="chat-form" class="d-flex gap-2" autocomplete="off">
+      <!-- Mood Dropdown -->
+      <select id="mood-select" class="form-select" aria-label="Select your mood">
+        <option value="" selected disabled>Choose your mood</option>
+        <option value="Excited 🤩">Excited 🤩</option>
+        <option value="Happy 😊">Happy 😊</option>
+        <option value="Relaxed 😎">Relaxed 😎</option>
+        <option value="Neutral 😐">Neutral 😐</option>
+        <option value="Sad 😢">Sad 😢</option>
+        <option value="Anxious 😨">Anxious 😨</option>
+        <option value="Angry 😠">Angry 😠</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <!-- Text Input -->
+      <input type="text" id="user-input" class="form-control" placeholder="Type your message..." required />
+      
+      <button type="submit" class="btn btn-primary" aria-label="Send Message">
+        <i class="fas fa-paper-plane"></i> Send
+      </button>
+    </form>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+
+  <!-- ✅ Logout logic -->
+  <script>
+    document.getElementById("logout-btn").addEventListener("click", function () {
+      localStorage.removeItem("isLoggedIn");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>
