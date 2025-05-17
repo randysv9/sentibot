@@ -51,19 +51,23 @@ def login():
     else:
         data = request.form
 
+    print("Login data received:", data)  # ✅ Debug line
+
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
 
-    print(f"[DEBUG] Received login - username: '{username}', password: '{password}'")
+    print(f"Username: {username}, Password: {password}")  # ✅ Debug line
 
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
     user = cursor.fetchone()
+
+    print("Database result:", user)  # ✅ Debug line
+
     conn.close()
 
     if user:
-        print(f"[DEBUG] User found in database: {dict(user)}")
         session["user"] = user["username"]
         session["role"] = user["role"]
 
@@ -72,8 +76,8 @@ def login():
         else:
             return jsonify({"success": True, "redirect": "/"})
     else:
-        print("[DEBUG] No matching user found in database.")
         return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
 
 
 
@@ -180,5 +184,6 @@ def daily_summary():
 
 
 if __name__ == "__main__":
-    init_db()
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 10000))  # Render sets PORT env variable
+    app.run(host="0.0.0.0", port=port, debug=True)
