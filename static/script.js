@@ -5,25 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.getElementById("clear-history-btn").addEventListener("click", clearMoodHistory);
 
-  // Add logout button event listener
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-      fetch("/logout", { method: "POST" })
-        .then(response => {
-          if (response.ok) {
-            window.location.href = "/login"; // Redirect to login page
-          } else {
-            alert("Logout failed.");
-          }
-        })
-        .catch(err => {
-          console.error("Logout error:", err);
-          alert("An error occurred during logout.");
-        });
-    });
-  }
-
   // Submit mood directly if selected
   const moodSelect = document.getElementById("mood-select");
   if (moodSelect) {

@@ -1,56 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Sentibot - Mood Support</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- Custom CSS (Flask static path) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
-<script>
-  // Redirect to login if not logged in
-  const isLoggedIn = localStorage.getItem("isLoggedIn");
-  if (!isLoggedIn) {
-    window.location.href = "login.html"; // Ensure login.html exists
-  }
-</script>
-
-
-<script>
-  document.getElementById("display-username").textContent = localStorage.getItem("username") || "Guest";
-</script>
-
-
 <body>
   <div class="container py-4">
-
-    <!-- Top bar with username and logout -->
+    
+    <!-- Names aligned left and right -->
     <div class="d-flex justify-content-between align-items-center mb-2">
-	
-      <div class="fw-bold">👤 <span id="display-username"></span></div>
-	  
-      <div>
-        <span class="fw-bold me-3">💬 Mary Macaraeg</span>
-        <!-- ✅ JavaScript-only logout button -->
-        <button type="button" id="logout-btn" class="btn btn-sm btn-outline-danger" aria-label="Logout">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+      <div class="fw-bold">👤 Randy Villanueva</div>  <!-- Left side -->
+      <div class="fw-bold">💬 Mary Macaraeg</div>  <!-- Right side -->
     </div>
 
-    <!-- Header -->
+    <!-- Header Section -->
     <div class="text-center mb-4">
       <h1 class="fw-bold">🤖 Sentibot</h1>
       <p class="text-muted">Your AI Buddy for Mood Support 💖</p>
     </div>
+
 
     <!-- Mood History Panel -->
     <div class="card mb-3 shadow-sm">
@@ -73,15 +51,25 @@
       </div>
     </div>
 
-    <!-- Mood Summary Panel -->
-    <div class="card mb-3 shadow-sm">
-      <div class="card-header bg-success text-white">📌 Mood Summary</div>
-      <div id="mood-summary" class="card-body">
-        <p class="text-muted">No summary available yet.</p>
-      </div>
-    </div>
+    
+	<!-- Mood Summary Panel -->
+<div class="card mb-3 shadow-sm">
+  <div class="card-header bg-success text-white">📌 Mood Summary</div>
+  <div id="mood-summary" class="card-body">
+    <p class="text-muted">No summary available yet.</p>
+  </div>
+</div>
 
-    <!-- Chat Panel -->
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- Chat Panel -->
     <div class="card mb-3 shadow-sm">
       <div class="card-header bg-primary text-white">💬 Chat</div>
       <div id="chat-box" class="card-body" style="height: 300px; overflow-y: auto;" aria-live="polite"></div>
@@ -102,27 +90,18 @@
         <option value="Other">Other</option>
       </select>
 
-      <!-- Text Input -->
-      <input type="text" id="user-input" class="form-control" placeholder="Type your message..." required />
+      <!-- Text Input for Message -->
+      <input type="text" id="user-input" class="form-control" placeholder="Type your message..." required>
       
       <button type="submit" class="btn btn-primary" aria-label="Send Message">
         <i class="fas fa-paper-plane"></i> Send
       </button>
     </form>
-
   </div>
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
-
-  <!-- ✅ Logout logic -->
-  <script>
-    document.getElementById("logout-btn").addEventListener("click", function () {
-      localStorage.removeItem("isLoggedIn");
-      window.location.href = "login.html";
-    });
-  </script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

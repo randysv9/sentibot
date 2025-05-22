@@ -1,118 +1,72 @@
+// backend/server.js
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const path = require("path");
-const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
-
-// Initialize SQLite database
-const db = new sqlite3.Database(path.join(__dirname, "users.db"), (err) => {
-  if (err) {
-    console.error("Error opening database", err.message);
-  } else {
-    console.log("Connected to SQLite database.");
-  }
-});
-
-// Setup database
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT
-    )
-  `);
-
-  db.run(
-    `INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)`,
-    ["admin", "admin123"],
-    (err) => {
-      if (err) {
-        console.error("Error inserting sample user:", err.message);
-      } else {
-        console.log("Sample user checked/added.");
-      }
-    }
-  );
-});
+const PORT = 3000;
 
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-  session({
-    secret: "sentibot-secret-key",
-    resave: false,
-    saveUninitialized: true,
-  })
-);
+app.use(session({
+  secret: "sentibot_secret_key",
+  resave: false,
+  saveUninitialized: true
+}));
 
-// Serve static files
+// Serve static files (e.g., CSS, JS)
 app.use("/static", express.static(path.join(__dirname, "../static")));
 
-// Serve login page
-app.get("/login.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "../templates/login.html"));
-});
+// Set templates directory and HTML rendering engine
+app.set("views", path.join(__dirname, "../templates"));
+app.engine("html", require("ejs").renderFile);
+app.set("view engine", "html");
 
-// Protected main page
+// Dummy user credentials
+const USER = { username: "admin", password: "1234" };
+
+// Routes
+
+// Redirect root to login
 app.get("/", (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/login.html");
-  }
-  res.sendFile(path.join(__dirname, "../templates/index.html"));
+  res.redirect("/login");
 });
 
-// Login
+// Login form
+app.get("/login", (req, res) => {
+  res.render("login.html"); // located at templates/login.html
+});
+
+// Handle login form submission
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-
-  db.get(
-    "SELECT * FROM users WHERE username = ? AND password = ?",
-    [username, password],
-    (err, row) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.json({ success: false, message: "Database error." });
-      }
-
-      if (row) {
-        req.session.user = { id: row.id, username: row.username };
-        res.json({ success: true, redirect: "/" });
-      } else {
-        res.json({ success: false, message: "Invalid credentials." });
-      }
-    }
-  );
+  if (username === USER.username && password === USER.password) {
+    req.session.loggedIn = true;
+    res.redirect("/index");
+  } else {
+    res.send("<script>alert('Invalid credentials'); window.location='/login';</script>");
+  }
 });
 
-// Logout
+// Protected index page
+app.get("/index", (req, res) => {
+  if (req.session.loggedIn) {
+    res.render("index.html"); // located at templates/index.html
+  } else {
+    res.redirect("/login");
+  }
+});
+
+// Logout route
 app.post("/logout", (req, res) => {
-  req.session.destroy();
-  res.json({ success: true });
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
 });
-
-// Mood logic
-function extractMoodFromMessage(message) {
-  const moodMap = {
-    excited: "Excited 🤩",
-    happy: "Happy 😊",
-    relaxed: "Relaxed 😎",
-    neutral: "Neutral 😐",
-    sad: "Sad 😢",
-    anxious: "Anxious 😨",
-    angry: "Angry 😠",
-  };
-  message = message.toLowerCase();
-  return Object.keys(moodMap).find((m) => message.includes(m))
-    ? moodMap[Object.keys(moodMap).find((m) => message.includes(m))]
-    : "Neutral 😐";
-}
 
 // Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Sentibot server running at http://localhost:${PORT}`);
 });
