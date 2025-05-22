@@ -182,7 +182,7 @@ function updateMoodSummary(history) {
 }
 
 function clearMoodHistory() {
-  fetch("/clear", { method: "POST" })
+ fetch("/clear-history", { method: "POST" })
     .then(() => loadMoodHistory())
     .catch(err => console.error("Error clearing mood history:", err));
 }
